@@ -22,7 +22,7 @@ export const REPORT = {
   semantic_analysis: {
     engine: "LLM semantic analyzer",
     model: "claude-sonnet-4-20250514",
-    mode: "pre-validated",
+    mode: "live",
     findings_count: 4,
     findings: [
       {

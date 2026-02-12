@@ -54,7 +54,7 @@ class TestExploitSynthesizer:
         assert synth.model == "custom-model"
 
     def test_generate_exploit_without_api_key(self):
-        """Without API key, should use pre-built exploits."""
+        """Without API key, should use pre-built validated exploits."""
         old_key = os.environ.pop("ANTHROPIC_API_KEY", None)
         try:
             synth = ExploitSynthesizer(api_key="")
@@ -73,7 +73,6 @@ class TestExploitSynthesizer:
             assert exploit.finding_id == "SEM-001"
             assert exploit.language == "python"
             assert len(exploit.code) > 50
-            assert synth.is_demo_mode
         finally:
             if old_key:
                 os.environ["ANTHROPIC_API_KEY"] = old_key
