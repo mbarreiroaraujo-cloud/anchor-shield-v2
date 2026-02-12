@@ -2,8 +2,8 @@
   "meta": {
     "tool": "anchor-shield",
     "version": "0.2.0",
-    "timestamp": "2026-02-12T19:37:27.353397+00:00",
-    "analysis_time_seconds": 0.2,
+    "timestamp": "2026-02-12T22:27:53.786410+00:00",
+    "analysis_time_seconds": 0.0,
     "target": "/home/user/anchor-shield/examples/vulnerable-lending",
     "route": "LLM-ONLY"
   },
@@ -69,21 +69,21 @@
     {
       "finding_id": "SEM-001",
       "title": "Collateral check ignores existing debt",
-      "status": "SIMULATED",
+      "status": "GENERATED",
       "language": "python",
       "code_file": "exploits/exploit_sem_001.py"
     },
     {
       "finding_id": "SEM-002",
       "title": "Withdrawal allows full exit with outstanding borrows",
-      "status": "SIMULATED",
+      "status": "GENERATED",
       "language": "python",
       "code_file": "exploits/exploit_sem_002.py"
     },
     {
       "finding_id": "SEM-003",
       "title": "Integer overflow in interest calculation",
-      "status": "SIMULATED",
+      "status": "GENERATED",
       "language": "python",
       "code_file": "exploits/exploit_sem_003.py"
     }
@@ -92,7 +92,7 @@
     "static_pattern_matches": 0,
     "logic_bugs_by_llm": 4,
     "exploits_generated": 3,
-    "exploits_confirmed": 3,
+    "exploits_confirmed": 0,
     "logic_bugs_missed_by_regex": 4
   }
 }
