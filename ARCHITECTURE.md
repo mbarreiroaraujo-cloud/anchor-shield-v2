@@ -161,6 +161,38 @@ The prompt in `semantic/prompts.py` can be adapted for different program types:
 
 The prompt structure (methodology -> focus areas -> output format) should be preserved.
 
+## Validation Methodology
+
+Real-world validation follows a three-stage process:
+
+### Stage 1: Target Acquisition
+- Select programs from diverse domains (DEX, staking, governance, token operations)
+- Mix of audited production protocols and framework examples
+- For multi-file protocols, concatenate key instruction files with separators
+
+### Stage 2: Automated Analysis
+- Run the full orchestrator pipeline against each target
+- Record both static and semantic findings
+- Generate exploit code where applicable
+
+### Stage 3: Manual Evaluation
+Each semantic finding is classified using epistemic rigor:
+
+| Classification | Definition |
+|----------------|------------|
+| **TRUE POSITIVE** | Verified by reading code — attack is plausible |
+| **LIKELY TRUE POSITIVE** | Code supports the claim but context is unclear |
+| **INFORMATIONAL** | Valid observation, but not exploitable in practice |
+| **FALSE POSITIVE** | LLM misunderstood the code or missed safety checks |
+
+For each finding, evaluate:
+1. Is the LLM's code description accurate?
+2. Does the control flow actually work as described?
+3. Could there be safety checks elsewhere that prevent exploitation?
+4. Is the attack scenario plausible in the Solana runtime environment?
+
+Results are documented in [RESEARCH_REPORT.md](RESEARCH_REPORT.md).
+
 ## Dependencies
 
 - **Python 3.9+**: Core analysis pipeline

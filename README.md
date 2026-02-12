@@ -157,6 +157,25 @@ The interactive dashboard provides four views:
 cd dashboard && npm install && npm run dev
 ```
 
+## Real-World Validation
+
+We validated the analyzer against 4 real open-source Solana programs to measure accuracy beyond the controlled demo:
+
+| Program | Domain | Lines | True Positives | Informational | False Positives |
+|---------|--------|-------|----------------|---------------|-----------------|
+| anchor-swap | DEX/AMM | 496 | 0 | 2 | 0 |
+| anchor-multisig | Governance | 280 | 2 | 0 | 3 |
+| marinade-staking | Liquid staking | 1,611 | 0 | 4 | 0 |
+| raydium-clmm | Concentrated liquidity | 2,931 | 0 | 4 | 1 |
+
+**Key findings on real code:**
+- Found **2 genuine missing-validation bugs** in the anchor-multisig example (zero threshold, empty owners list)
+- Found **1 likely edge-case DoS** in anchor-swap (NonZeroU64 panic on sub-lot amounts)
+- On **audited production protocols** (Marinade, Raydium): produced only informational findings (code quality observations), no false claims of exploitable bugs
+- **False positive rate**: 18% (3/17 findings), primarily from misunderstanding Solana execution model specifics
+
+Every finding was manually classified against source code. Full methodology and per-finding evaluation: [RESEARCH_REPORT.md](RESEARCH_REPORT.md).
+
 ## Limitations
 
 - **LLM dependence**: Semantic analysis quality depends on the model. We use claude-sonnet for the best balance of speed and capability.
