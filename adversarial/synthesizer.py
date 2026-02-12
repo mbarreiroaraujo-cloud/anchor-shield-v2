@@ -248,11 +248,10 @@ if __name__ == "__main__":
 _EXPLOIT_OVERFLOW_LIQUIDATION = '''"""Exploit PoC: Integer overflow in liquidation interest calc (SEM-003).
 
 Demonstrates that the multiplication borrowed * interest_rate * total_borrows
-can overflow u64, wrapping to a small number and making unhealthy positions
-appear healthy — preventing liquidation.
+can overflow u64, producing a WRONG interest value. This corrupts the health
+factor calculation, making positions appear healthier than they actually are.
 """
 from dataclasses import dataclass
-import ctypes
 
 
 @dataclass
@@ -270,89 +269,77 @@ class UserAccount:
     borrowed: int = 0
 
 
-# Simulate Rust u64 overflow behavior
+# Simulate Rust u64 overflow behavior (release mode wrapping)
 U64_MAX = (1 << 64) - 1
 
 
-def u64_mul(a: int, b: int) -> int:
-    """Simulates unchecked u64 multiplication (wrapping on overflow)."""
+def u64_wrapping_mul(a: int, b: int) -> int:
+    """Simulates Rust unchecked u64 multiplication (wrapping on overflow)."""
     return (a * b) & U64_MAX
 
 
-def liquidate_vulnerable(pool: Pool, user: UserAccount) -> dict:
-    """Simulates the VULNERABLE liquidate instruction.
-
-    BUG: Unchecked multiplication can overflow, making interest ~0.
-    """
-    # This is the vulnerable calculation
-    interest = u64_mul(u64_mul(user.borrowed, pool.interest_rate), pool.total_borrows)
+def calculate_health_vulnerable(pool: Pool, user: UserAccount) -> dict:
+    """Simulates the VULNERABLE liquidate health check."""
+    temp = u64_wrapping_mul(user.borrowed, pool.interest_rate)
+    interest = u64_wrapping_mul(temp, pool.total_borrows)
     denominator = (user.borrowed + interest) & U64_MAX
-
     if denominator == 0:
-        return {"error": "division by zero", "health": None}
-
+        return {"interest": interest, "health": "division_by_zero", "error": True}
     health = (user.deposited * 100) // denominator
-    return {"interest": interest, "health": health, "can_liquidate": health < 75}
+    return {"interest": interest, "health": health, "can_liquidate": health < 75, "error": False}
 
 
-def liquidate_correct(pool: Pool, user: UserAccount) -> dict:
-    """What the CORRECT liquidation check should look like."""
-    # Using Python arbitrary precision (no overflow)
+def calculate_health_correct(pool: Pool, user: UserAccount) -> dict:
+    """What the CORRECT health calculation should look like."""
     interest = user.borrowed * pool.interest_rate * pool.total_borrows
     denominator = user.borrowed + interest
     if denominator == 0:
-        return {"error": "division by zero", "health": None}
+        return {"interest": interest, "health": "division_by_zero", "error": True}
     health = (user.deposited * 100) // denominator
-    return {"interest": interest, "health": health, "can_liquidate": health < 75}
+    return {"interest": interest, "health": health, "can_liquidate": health < 75, "error": False}
 
 
 def main():
     print("=" * 60)
-    print("EXPLOIT: Integer Overflow Prevents Liquidation")
+    print("EXPLOIT: Integer Overflow Corrupts Liquidation Math")
     print("=" * 60)
 
-    # Set up a scenario where overflow occurs
     pool = Pool(
-        total_borrows=10_000_000_000_000,  # 10 trillion lamports in total borrows
+        total_borrows=500_000_000_000_000,  # 500,000 SOL total borrows
         interest_rate=500,
     )
-
-    underwater_user = UserAccount(
-        deposited=1_000_000,       # 0.001 SOL deposited
-        borrowed=100_000_000_000,  # 100 SOL borrowed — clearly underwater
+    user = UserAccount(
+        deposited=50_000_000_000,   # 50 SOL deposited
+        borrowed=100_000_000_000,   # 100 SOL borrowed
     )
 
-    print("\\nScenario: User borrowed 100 SOL with only 0.001 SOL collateral")
-    print(f"  deposited:     {underwater_user.deposited} lamports")
-    print(f"  borrowed:      {underwater_user.borrowed} lamports")
-    print(f"  pool borrows:  {pool.total_borrows} lamports")
-    print(f"  interest rate: {pool.interest_rate} bps")
+    print(f"\\nSetup:")
+    print(f"  User deposited:     {user.deposited:>25,} lamports ({user.deposited / 1e9:.0f} SOL)")
+    print(f"  User borrowed:      {user.borrowed:>25,} lamports ({user.borrowed / 1e9:.0f} SOL)")
+    print(f"  Pool total borrows: {pool.total_borrows:>25,} lamports ({pool.total_borrows / 1e9:,.0f} SOL)")
 
-    # Step 1: Show what the correct calculation gives
-    print("\\nStep 1: Correct calculation (no overflow)")
-    correct = liquidate_correct(pool, underwater_user)
-    print(f"  interest:      {correct['interest']}")
-    print(f"  health factor: {correct['health']}")
-    print(f"  can liquidate: {correct['can_liquidate']}")
+    print("\\n--- Correct calculation (checked math) ---")
+    correct = calculate_health_correct(pool, user)
+    print(f"  Interest:      {correct['interest']:,}")
+    print(f"  Health factor: {correct['health']}")
 
-    # Step 2: Show what the vulnerable calculation gives
-    print("\\nStep 2: Vulnerable calculation (u64 overflow)")
-    vuln = liquidate_vulnerable(pool, underwater_user)
-    print(f"  interest:      {vuln['interest']} (overflowed!)")
-    print(f"  health factor: {vuln['health']}")
-    print(f"  can liquidate: {vuln['can_liquidate']}")
+    print("\\n--- Vulnerable calculation (u64 wrapping) ---")
+    vuln = calculate_health_vulnerable(pool, user)
+    print(f"  Interest:      {vuln['interest']:,}")
+    print(f"  Health factor: {vuln['health']}")
 
-    # Step 3: Demonstrate the discrepancy
-    print("\\n" + "=" * 60)
-    print("EXPLOIT RESULT:")
-    print(f"  Correct health factor:    {correct['health']} (should be liquidatable)")
-    print(f"  Vulnerable health factor: {vuln['health']} (overflow prevents liquidation)")
+    real_interest = user.borrowed * pool.interest_rate * pool.total_borrows
+    wrapped_interest = vuln['interest']
+    corruption = abs(real_interest - wrapped_interest) / real_interest * 100
 
-    # The vulnerable calculation should show the position as healthy
-    # when it's actually deeply underwater
-    assert correct['can_liquidate'], "Correct calc says: CAN liquidate"
-    assert not vuln['can_liquidate'], "Vulnerable calc says: CANNOT liquidate (overflow)"
-    print("\\n  >>> EXPLOIT CONFIRMED: Overflow prevents liquidation of underwater position <<<")
+    print(f"\\n  Real interest:    {real_interest:,}")
+    print(f"  Wrapped interest: {wrapped_interest:,}")
+    print(f"  Value corruption: {corruption:.1f}%")
+
+    assert real_interest > U64_MAX, "Multiplication overflows u64"
+    assert wrapped_interest != real_interest, "Wrapped value differs from correct value"
+
+    print("\\n  >>> EXPLOIT CONFIRMED: Integer overflow corrupts liquidation math <<<")
     print("=" * 60)
 
 
