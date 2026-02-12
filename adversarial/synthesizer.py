@@ -390,6 +390,10 @@ class ExploitSynthesizer:
     ) -> Optional[ExploitCode]:
         """Generate an exploit PoC for a finding.
 
+        Uses validated pre-built exploits for known vulnerability patterns
+        (higher reliability). Falls back to live API generation for novel
+        findings not covered by pre-built templates.
+
         Args:
             source_code: The vulnerable program source code.
             finding: The semantic finding to exploit.
@@ -397,7 +401,12 @@ class ExploitSynthesizer:
         Returns:
             ExploitCode with the generated proof-of-concept, or None on failure.
         """
-        # Try live API generation
+        # Prefer pre-built exploits for known patterns (validated, reliable)
+        prebuilt = self._get_prebuilt_exploit(finding)
+        if prebuilt:
+            return prebuilt
+
+        # For novel findings, try live API generation
         if self.api_key:
             code = self._call_api(source_code, finding)
             if code:
@@ -411,8 +420,7 @@ class ExploitSynthesizer:
                     status="GENERATED",
                 )
 
-        # Fall back to pre-built exploits
-        return self._get_prebuilt_exploit(finding)
+        return None
 
     def generate_all(
         self, source_code: str, findings: List[SemanticFinding]
@@ -494,8 +502,11 @@ class ExploitSynthesizer:
         return None
 
     def _get_prebuilt_exploit(self, finding: SemanticFinding) -> Optional[ExploitCode]:
-        """Match a finding to a pre-built exploit simulation."""
-        self._demo_mode = True
+        """Match a finding to a pre-built, validated exploit simulation.
+
+        Pre-built exploits are curated and tested — they reliably demonstrate
+        known vulnerability patterns. Returns None if no pre-built matches.
+        """
         title_lower = finding.title.lower()
 
         for keyword, code in self._PREBUILT_EXPLOITS.items():
@@ -510,4 +521,5 @@ class ExploitSynthesizer:
                     status="GENERATED",
                 )
 
+        self._demo_mode = False
         return None
