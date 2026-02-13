@@ -1,6 +1,6 @@
 """Autonomous security orchestrator — single-command analysis pipeline.
 
-Runs the complete anchor-shield analysis pipeline:
+Runs the complete anchor-shield-v2 analysis pipeline:
   1. Static regex pattern scanning
   2. Semantic LLM analysis for logic vulnerabilities
   3. Exploit proof-of-concept generation
@@ -49,7 +49,7 @@ BAR = "\u2550" * 61
 def _print_header():
     """Print the pipeline header banner."""
     print(f"\n{BOLD}{BAR}{RESET}")
-    print(f"{BOLD} anchor-shield — Adversarial Security Analysis{RESET}")
+    print(f"{BOLD} anchor-shield-v2 — Adversarial Security Analysis{RESET}")
     print(f"{BOLD}{BAR}{RESET}\n")
 
 
@@ -236,14 +236,24 @@ class SecurityOrchestrator:
 
         elapsed = time.time() - start_time
 
+        # Determine route based on what actually executed
+        if bankrun_confirmed > 0:
+            route = "BANKRUN"
+        elif has_bankrun and binary_path:
+            route = "BANKRUN"
+        elif self._has_anchor_toolchain():
+            route = "FULL"
+        else:
+            route = "LLM-ONLY"
+
         report = {
             "meta": {
-                "tool": "anchor-shield",
-                "version": "0.2.0",
+                "tool": "anchor-shield-v2",
+                "version": "0.3.0",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "analysis_time_seconds": round(elapsed, 1),
                 "target": target_path,
-                "route": "LLM-ONLY" if not self._has_anchor_toolchain() else "FULL",
+                "route": route,
             },
             "static_analysis": {
                 "engine": "regex pattern matcher v0.1.0",
@@ -378,8 +388,26 @@ class SecurityOrchestrator:
 
     @staticmethod
     def _has_bankrun(exploit_dir: str) -> bool:
-        """Check if solana-bankrun is available in exploits dir."""
+        """Check if solana-bankrun is available in exploits dir.
+
+        If node_modules is missing but package.json exists, attempts
+        npm install automatically so bankrun exploits can execute.
+        """
         bankrun_path = os.path.join(exploit_dir, "node_modules", "solana-bankrun")
+        if os.path.isdir(bankrun_path):
+            return True
+        # Auto-install if package.json exists but node_modules is missing
+        pkg_json = os.path.join(exploit_dir, "package.json")
+        if os.path.isfile(pkg_json) and not os.path.isdir(os.path.join(exploit_dir, "node_modules")):
+            try:
+                subprocess.run(
+                    ["npm", "install"],
+                    cwd=exploit_dir,
+                    capture_output=True,
+                    timeout=120,
+                )
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                pass
         return os.path.isdir(bankrun_path)
 
     @staticmethod
@@ -460,7 +488,7 @@ class SecurityOrchestrator:
 def main():
     """CLI entry point for the orchestrator."""
     parser = argparse.ArgumentParser(
-        description="anchor-shield: Adversarial Security Analysis for Solana",
+        description="anchor-shield-v2: Adversarial Security Analysis for Solana",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"

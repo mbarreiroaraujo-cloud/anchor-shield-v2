@@ -73,7 +73,7 @@ class TestSecurityOrchestrator:
             assert os.path.exists("SECURITY_REPORT.json")
             with open("SECURITY_REPORT.json") as f:
                 saved = json.load(f)
-            assert saved["meta"]["tool"] == "anchor-shield"
+            assert saved["meta"]["tool"] == "anchor-shield-v2"
         finally:
             if old_key:
                 os.environ["ANTHROPIC_API_KEY"] = old_key
