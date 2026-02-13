@@ -1,4 +1,4 @@
-"""Autonomous security orchestrator for anchor-shield.
+"""Autonomous security orchestrator for anchor-shield-v2.
 
 Provides the single-command entry point that runs the complete
 analysis pipeline: static scan -> semantic analysis -> exploit

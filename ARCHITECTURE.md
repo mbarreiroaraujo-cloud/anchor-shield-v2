@@ -2,7 +2,7 @@
 
 ## Overview
 
-anchor-shield is a three-layer security analysis tool for Solana Anchor programs. It combines static pattern matching, semantic LLM analysis, and adversarial exploit synthesis into an autonomous security pipeline.
+anchor-shield-v2 is a three-layer security analysis tool for Solana Anchor programs. It combines static pattern matching, semantic LLM analysis, and adversarial exploit synthesis into an autonomous security pipeline.
 
 ## System Components
 

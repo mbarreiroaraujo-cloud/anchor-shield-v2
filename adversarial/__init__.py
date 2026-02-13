@@ -1,4 +1,4 @@
-"""Adversarial exploit synthesis module for anchor-shield.
+"""Adversarial exploit synthesis module for anchor-shield-v2.
 
 Generates proof-of-concept exploit code for vulnerabilities
 discovered by the semantic analyzer. Exploits are self-contained

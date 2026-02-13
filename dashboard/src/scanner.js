@@ -1,5 +1,5 @@
 /**
- * In-browser scanner engine for anchor-shield dashboard.
+ * In-browser scanner engine for anchor-shield-v2 dashboard.
  * Fetches Rust source files from GitHub API and runs pattern detection.
  */
 

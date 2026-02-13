@@ -22,7 +22,7 @@ def format_terminal_report(report: ScanReport) -> str:
 
     # Header
     lines.append("")
-    lines.append(f"{BOLD}anchor-shield Scan Report{RESET}")
+    lines.append(f"{BOLD}anchor-shield-v2 Scan Report{RESET}")
     lines.append("=" * 60)
     lines.append(f"Target:           {report.target}")
     lines.append(f"Files scanned:    {report.files_scanned}")
@@ -134,7 +134,7 @@ def format_html_report(report: ScanReport) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>anchor-shield Scan Report</title>
+    <title>anchor-shield-v2 Scan Report</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -180,7 +180,7 @@ def format_html_report(report: ScanReport) -> str:
 </head>
 <body>
     <div class="container">
-        <h1>anchor-shield Scan Report</h1>
+        <h1>anchor-shield-v2 Scan Report</h1>
         <p class="subtitle">Automated security scanner for Solana Anchor programs</p>
 
         <div class="meta">

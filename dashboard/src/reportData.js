@@ -5,7 +5,7 @@
 
 export const REPORT = {
   meta: {
-    tool: "anchor-shield",
+    tool: "anchor-shield-v2",
     version: "0.3.0",
     timestamp: new Date().toISOString(),
     analysis_time_seconds: 15.4,

@@ -1,6 +1,6 @@
 # Real-World Validation Targets
 
-Programs acquired for real-world I+D validation of anchor-shield's semantic analysis capabilities.
+Programs acquired for real-world I+D validation of anchor-shield-v2's semantic analysis capabilities.
 
 | # | Program | Domain | Source | Lines | Audited? | Notes |
 |---|---------|--------|--------|-------|----------|-------|

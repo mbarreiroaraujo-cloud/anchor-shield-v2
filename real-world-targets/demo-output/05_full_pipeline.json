@@ -1,10 +1,10 @@
 {
   "meta": {
-    "tool": "anchor-shield",
+    "tool": "anchor-shield-v2",
     "version": "0.2.0",
     "timestamp": "2026-02-12T22:25:21.732101+00:00",
     "analysis_time_seconds": 81.5,
-    "target": "/home/user/anchor-shield/real-world-targets/raydium-clmm",
+    "target": "real-world-targets/raydium-clmm",
     "route": "LLM-ONLY"
   },
   "static_analysis": {

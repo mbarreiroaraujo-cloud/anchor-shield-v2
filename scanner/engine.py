@@ -1,4 +1,4 @@
-"""Core scanning engine for anchor-shield."""
+"""Core scanning engine for anchor-shield-v2."""
 
 import os
 import re

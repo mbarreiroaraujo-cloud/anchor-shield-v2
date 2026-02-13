@@ -1,4 +1,4 @@
-"""Semantic analysis module for anchor-shield.
+"""Semantic analysis module for anchor-shield-v2.
 
 Uses LLM reasoning to detect logic vulnerabilities that static
 pattern matching cannot find. The analyzer sends Anchor program

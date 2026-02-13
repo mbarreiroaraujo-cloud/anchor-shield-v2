@@ -22,7 +22,7 @@ class GitHubClient:
         if self.token:
             self.session.headers["Authorization"] = f"token {self.token}"
         self.session.headers["Accept"] = "application/vnd.github.v3+json"
-        self.session.headers["User-Agent"] = "anchor-shield/0.1.0"
+        self.session.headers["User-Agent"] = "anchor-shield-v2/0.1.0"
         self._rate_limit_remaining = 60
         self._rate_limit_reset = 0
 

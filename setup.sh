@@ -1,9 +1,9 @@
 #!/bin/bash
-# anchor-shield — One-command setup script
+# anchor-shield-v2 — One-command setup script
 
 set -e
 
-echo "Installing anchor-shield..."
+echo "Installing anchor-shield-v2..."
 echo ""
 
 # Python dependencies

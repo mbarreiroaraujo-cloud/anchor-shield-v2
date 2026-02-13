@@ -810,7 +810,7 @@ export default function App() {
         {tabContent[activeTab]}
       </main>
       <footer className="border-t border-gray-800 py-6 text-center text-sm text-gray-600">
-        anchor-shield v0.3.0 | Adversarial Security Agent for Solana
+        anchor-shield-v2 v0.3.0 | Adversarial Security Agent for Solana
       </footer>
     </div>
   )

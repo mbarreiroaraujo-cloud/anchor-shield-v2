@@ -1,4 +1,4 @@
-"""CLI entry point for anchor-shield."""
+"""CLI entry point for anchor-shield-v2."""
 
 import sys
 import os
@@ -27,9 +27,9 @@ BANNER = """[bold purple]
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="anchor-shield")
+@click.version_option(version="0.1.0", prog_name="anchor-shield-v2")
 def cli():
-    """anchor-shield: Automated security scanner for Solana Anchor programs."""
+    """anchor-shield-v2: Automated security scanner for Solana Anchor programs."""
     pass
 
 

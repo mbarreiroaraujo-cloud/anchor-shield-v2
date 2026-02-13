@@ -1,11 +1,11 @@
 {
   "meta": {
-    "tool": "anchor-shield",
-    "version": "0.2.0",
-    "timestamp": "2026-02-13T00:23:12.688071+00:00",
-    "analysis_time_seconds": 15.6,
-    "target": "/home/user/anchor-shield/examples/vulnerable-lending",
-    "route": "LLM-ONLY"
+    "tool": "anchor-shield-v2",
+    "version": "0.3.0",
+    "timestamp": "2026-02-13T09:49:14.935796+00:00",
+    "analysis_time_seconds": 14.2,
+    "target": "/home/user/anchor-shield-v2/examples/vulnerable-lending",
+    "route": "BANKRUN"
   },
   "static_analysis": {
     "engine": "regex pattern matcher v0.1.0",

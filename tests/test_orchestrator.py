@@ -52,7 +52,7 @@ class TestSecurityOrchestrator:
             report = orch.analyze(
                 target_path="examples/vulnerable-lending/",
                 execute_exploits=True,
-                output_dir="/tmp/anchor-shield-test-output",
+                output_dir="/tmp/anchor-shield-v2-test-output",
             )
             # Verify report structure
             assert "meta" in report
@@ -84,7 +84,7 @@ class TestSecurityOrchestrator:
         report = orch.analyze(
             target_path="examples/vulnerable-lending/",
             execute_exploits=False,
-            output_dir="/tmp/anchor-shield-test-no-exec",
+            output_dir="/tmp/anchor-shield-v2-test-no-exec",
         )
         assert report["summary"]["exploits_generated"] >= 1
 
@@ -134,7 +134,7 @@ class TestSecurityOrchestrator:
         report = orch.analyze(
             target_path="examples/vulnerable-lending/",
             execute_exploits=True,
-            output_dir="/tmp/anchor-shield-test-bankrun",
+            output_dir="/tmp/anchor-shield-v2-test-bankrun",
         )
         assert isinstance(report["bankrun_exploits"], list)
         assert isinstance(report["python_exploits"], list)

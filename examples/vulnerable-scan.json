@@ -1,5 +1,5 @@
 {
-  "target": "/home/user/anchor-shield/tests/test_patterns/vulnerable",
+  "target": "tests/test_patterns/vulnerable",
   "scan_time_seconds": 0.01,
   "files_scanned": 6,
   "patterns_checked": 6,

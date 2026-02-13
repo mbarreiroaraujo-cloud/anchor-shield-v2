@@ -1,4 +1,4 @@
-"""Tests for anchor-shield scanner patterns.
+"""Tests for anchor-shield-v2 scanner patterns.
 
 Each pattern has:
   - True positive: known-vulnerable code that MUST be detected

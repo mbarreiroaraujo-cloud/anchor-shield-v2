@@ -1,4 +1,4 @@
-# anchor-shield — Adversarial Security Agent for Solana
+# anchor-shield-v2 — Adversarial Security Agent for Solana
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -12,7 +12,7 @@ Consider a lending pool where the `borrow` function checks `deposited >= amount`
 
 ## The Solution
 
-anchor-shield combines four analysis layers into an autonomous security pipeline:
+anchor-shield-v2 combines four analysis layers into an autonomous security pipeline:
 
 | Layer | Method | What It Finds |
 |-------|--------|---------------|
@@ -48,8 +48,8 @@ All exploits ran against `vuln_lending.so` (compiled via `cargo-build-sbf`) usin
 
 ```bash
 # Clone and install
-git clone https://github.com/your-org/anchor-shield.git
-cd anchor-shield
+git clone https://github.com/mbarreiroaraujo-cloud/anchor-shield-v2.git
+cd anchor-shield-v2
 pip install -r requirements.txt
 
 # Set your API key (for live LLM analysis)
@@ -90,7 +90,7 @@ Source Code (.rs)
 ### Module Structure
 
 ```
-anchor-shield/
+anchor-shield-v2/
 ├── scanner/           # Static regex pattern engine (v1)
 │   ├── engine.py      # Core scan engine
 │   └── patterns/      # Vulnerability pattern definitions
