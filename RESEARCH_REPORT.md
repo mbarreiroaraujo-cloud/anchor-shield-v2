@@ -2,7 +2,7 @@
 
 ## Methodology
 
-- **Targets**: 21 programs (10 main analysis + 11 sealevel-attacks calibration)
+- **Targets**: 26 programs (15 main analysis + 11 sealevel-attacks calibration)
 - **Analysis**: Static regex scanning (6 patterns) + Semantic LLM analysis (claude-sonnet-4-20250514)
 - **Evaluation**: Each finding was manually evaluated by reading the source code
 - **Classification**: TRUE POSITIVE, LIKELY TRUE POSITIVE, INFORMATIONAL, FALSE POSITIVE, UNCERTAIN
@@ -13,7 +13,7 @@
 
 | Tier | Programs | Description | Expected Findings |
 |------|---------|-------------|-------------------|
-| Tier 1: Anchor tests | 5 | Framework examples (escrow, lockup, multisig, swap, token-proxy) | Some bugs in unaudited test code |
+| Tier 1: Anchor tests | 10 | Framework examples (escrow, lockup, multisig, swap, token-proxy, tictactoe, cashiers-check, ido-pool, cfo, auction-house) | Some bugs in unaudited test code |
 | Tier 2: Community | 3 | Unaudited open source (sol-vault, solana-staking, nft-staking-shuk) | Highest chance of real bugs |
 | Tier 3: Production | 2 | Audited protocols (marinade, raydium) | Informational only |
 | Tier 4: Calibration | 11 | sealevel-attacks (insecure + secure + recommended) | Known vulnerabilities |
@@ -148,24 +148,94 @@
 
 **Assessment**: Cannot analyze. Demonstrates the single-file analysis limitation.
 
+## Results — Batch 3 Analysis (5 Additional Programs)
+
+### Target 11: anchor-tictactoe (On-chain game, 213 lines)
+
+- **Domain**: Game logic
+- **Source**: coral-xyz/anchor (test suite)
+- **Static findings**: 0
+- **Semantic findings**: 3
+
+| ID | Severity | Title | Classification | Reasoning |
+|----|----------|-------|---------------|-----------|
+| SEM-001 | Critical | Inverted game_state constraint prevents player_o from joining | TRUE POSITIVE | `Playerjoin` has constraint `game.game_state != 0`, but after `initialize`, game_state is 0 (default). Player O can NEVER join. Games permanently stuck. Should be `== 0`. |
+| SEM-002 | Medium | Array out-of-bounds on player_move ≥ 9 | INFORMATIONAL | Board is [u8; 9] but player_move is u8 (0-255). Panics on bad input, but only self-inflicted DoS. |
+| SEM-003 | Low | Unchecked addition on game_count | INFORMATIONAL | u64 overflow astronomically unlikely. |
+
+**Assessment**: 1 true positive (inverted constraint makes game unplayable), 2 informational.
+
+### Target 12: anchor-cashiers-check (Escrow, 180 lines)
+
+- **Domain**: Cashier's check / escrow
+- **Source**: coral-xyz/anchor (test suite)
+- **Static findings**: 5
+- **Semantic findings**: 3 (all INFORMATIONAL)
+
+**Assessment**: 0 true positives, 3 informational. CPI implicitly enforces signer checks.
+
+### Target 13: anchor-ido-pool (IDO token sale, 675 lines)
+
+- **Domain**: IDO / token sale (Mango Markets design)
+- **Source**: coral-xyz/anchor (test suite)
+- **Static findings**: 4
+- **Semantic findings**: 3 (all INFORMATIONAL)
+
+**Assessment**: 0 true positives, 3 informational. Intentional permissionless redemption design (with explicit comments). Well-structured access control phases.
+
+### Target 14: anchor-cfo (Serum DEX fee distribution, 995 lines)
+
+- **Domain**: DEX fee collection and distribution
+- **Source**: coral-xyz/anchor (test suite, marked WIP)
+- **Static findings**: 36
+- **Semantic findings**: 3 (all INFORMATIONAL)
+
+**Assessment**: 0 true positives, 3 informational. Complex program with good architecture: PDA-controlled vaults, authority-gated configuration, anti-sandwich protection.
+
+### Target 15: anchor-auction-house (NFT marketplace, 1745 lines)
+
+- **Domain**: NFT marketplace (Metaplex Auction House)
+- **Source**: coral-xyz/anchor (test suite)
+- **Static findings**: 89
+- **Semantic findings**: 15
+
+| ID | Severity | Title | Classification | Reasoning |
+|----|----------|-------|---------------|-----------|
+| SEM-001 | High | Authority can withdraw any user's escrow without user signature | LIKELY TRUE POSITIVE | Authority has custodial power over all escrowed funds. Funds go to user's account (not stolen), but centralization risk. |
+| SEM-013 | High | CreateAuctionHouse: authority not required as Signer | TRUE POSITIVE | Attacker can front-run auction house creation, setting malicious fee/treasury destinations. Authority can fix via update, but creates griefing vector. |
+| (10 others) | Low-Medium | Various centralization, dead code, design observations | INFORMATIONAL | See classification.md for full details. |
+| SEM-004, SEM-005, SEM-007 | — | Permissionless cranker, PDA enforcement, runtime cleanup | FALSE POSITIVE | Intentional design patterns or Solana runtime behavior. |
+
+**Assessment**: 1 true positive (front-run griefing), 1 likely true positive (custodial authority), 10 informational, 3 false positives.
+
 ## Aggregate Metrics
+
+### Overall (15 programs, 58 findings)
 
 | Metric | Count | Percentage |
 |--------|-------|-----------|
-| **Total semantic findings** | 31 | 100% |
-| True Positives | 4 | 12.9% |
-| Likely True Positives | 2 | 6.5% |
-| Informational | 22 | 71.0% |
-| False Positives | 3 | 9.7% |
+| **Total semantic findings** | 58 | 100% |
+| True Positives | 6 | 10.3% |
+| Likely True Positives | 3 | 5.2% |
+| Informational | 43 | 74.1% |
+| False Positives | 6 | 10.3% |
 
 ### By Program Category
 
 | Category | Programs | TP | LTP | INFO | FP | FP Rate |
 |----------|---------|----|----|------|-----|---------|
 | Unaudited community | 3 | 2 | 0 | 6 | 0 | 0% |
-| Anchor framework tests | 5 | 2 | 2 | 8 | 3 | 19% |
-| Audited production | 2 | 0 | 0 | 8 | 1 | 11% |
-| **Total** | **10** | **4** | **2** | **22** | **3** | **9.7%** |
+| Anchor framework tests | 10 | 4 | 3 | 29 | 6 | 14% |
+| Audited production | 2 | 0 | 0 | 8 | 0 | 0% |
+| **Total** | **15** | **6** | **3** | **43** | **6** | **10.3%** |
+
+### By Batch
+
+| Batch | Programs | Findings | TP | LTP | INFO | FP | FP Rate |
+|-------|---------|----------|----|----|------|-----|---------|
+| Batch 1 | 10 | 31 | 4 | 2 | 22 | 3 | 9.7% |
+| Batch 3 | 5 | 27 | 2 | 1 | 21 | 3 | 11.1% |
+| **Total** | **15** | **58** | **6** | **3** | **43** | **6** | **10.3%** |
 
 ## Sealevel-Attacks Calibration
 
@@ -242,31 +312,37 @@ Full details: [real-world-targets/anchor-escrow/EXPLOIT_REPORT.md](real-world-ta
 | 1 | anchor-multisig | Zero threshold bypasses multisig | Critical | Bankrun CONFIRMED |
 | 2 | anchor-multisig | Empty owners locks funds | Critical | Bankrun CONFIRMED |
 | 3 | solana-staking | Unstake never returns NFT | Critical | Simulation CONFIRMED |
-| 4 | solana-staking | Missing Signer on unstake | High | Simulation CONFIRMED |
-| 5 | anchor-escrow | Cancel without Signer (DoS) | High | Simulation CONFIRMED |
-| 6 | anchor-swap | NonZeroU64 panic on small amounts | High | Likely TP (not simulated) |
+| 4 | anchor-tictactoe | Inverted constraint blocks player join | Critical | Manual review |
+| 5 | solana-staking | Missing Signer on unstake | High | Simulation CONFIRMED |
+| 6 | anchor-escrow | Cancel without Signer (DoS) | High | Simulation CONFIRMED |
+| 7 | anchor-auction-house | CreateAuctionHouse authority not Signer | High | Manual review |
+| 8 | anchor-swap | NonZeroU64 panic on small amounts | High | Likely TP |
+| 9 | anchor-auction-house | Authority custodial withdrawal | High | Likely TP |
 
 ## Conclusions
 
-**KNOW** (verified empirically):
-- The semantic analyzer finds real vulnerabilities on programs it has never seen before (multisig zero-threshold, multisig empty-owners, solana-staking incomplete unstake, solana-staking missing signer).
+**KNOW** (verified empirically across 15 programs, 58 findings):
+- The semantic analyzer finds real vulnerabilities on programs it has never seen before: 6 true positives across 4 different programs (multisig, solana-staking, tictactoe, auction-house).
 - On audited production protocols (Marinade, Raydium), it produces informational findings but no true positives — consistent with these programs having been professionally audited.
-- The false positive rate on real programs is 9.7% (3/31), concentrated in a single program (anchor-multisig) from integer cast and boolean idempotency misunderstandings.
-- The regex scanner finds 0 of the logic bugs that the semantic analyzer detects, confirming the core value proposition.
+- The false positive rate across 15 programs is 10.3% (6/58), with FPs concentrated in two programs (anchor-multisig batch 1, anchor-auction-house batch 3).
+- The FP rate is stable between batches: 9.7% (batch 1) vs 11.1% (batch 3), suggesting the detector's error profile is consistent, not a one-off result.
+- The regex scanner finds 0 of the logic bugs that the semantic analyzer detects (tictactoe inverted constraint, multisig threshold, incomplete unstake, etc.), confirming the core value proposition.
 - 4/11 sealevel-attack vulnerability classes are invisible to regex-based detection.
 - PDA signer accounts were the #1 source of static scanner false positives, reduced by 53% in v0.4.0.
 - Multi-file programs are a blind spot for single-file analysis (nft-staking-shuk).
+- The new FP categories from batch 3 are: (1) intentional permissionless design patterns (cranker/relayer), (2) Solana runtime behavior (zero-lamport garbage collection), (3) PDA seed enforcement. These suggest adding Solana DeFi design pattern awareness to the prompt.
 
 **BELIEVE** (inferred from evidence):
-- The tool is most effective on unaudited or early-stage programs where basic input validation bugs are common.
+- The tool is most effective on unaudited or early-stage programs where basic input validation and logic bugs are common.
 - The informational findings on audited protocols are genuinely useful for code review (defense-in-depth recommendations).
-- The v0.4.0 prompt improvements would eliminate the 3 observed FPs, potentially reducing FP rate to ~0% on the tested corpus.
+- The v0.4.0 prompt improvements would eliminate the batch 1 FPs. A v0.5.0 prompt adding permissionless-cranker and Solana-runtime rules would address the batch 3 FPs.
+- Larger programs (1745 lines auction-house) produce more findings but at a lower TP rate — the signal-to-noise ratio decreases with program complexity.
 
 **SPECULATE** (uncertain):
 - Whether the tool would find exploitable bugs on real production protocols that professional auditors missed.
 - Whether multi-file analysis (analyzing an entire protocol at once) would improve accuracy over single-file analysis.
 - Whether a fine-tuned model specifically for Solana security would significantly outperform a general-purpose model.
-- Whether the FP rate improvement from v0.4.0's prompt changes will hold across a larger corpus.
+- Whether the 10.3% FP rate would hold on a 50+ program corpus or whether it would regress.
 
 ## Limitations Observed
 
@@ -275,6 +351,8 @@ Full details: [real-world-targets/anchor-escrow/EXPLOIT_REPORT.md](real-world-ta
 3. **False positives on casts**: usize to u64 cast FPs. Addressed in v0.4.0 prompt.
 4. **Context window**: Large programs (2900+ lines) approach limits for detailed analysis.
 5. **Static scanner blind spot**: Cannot distinguish manual validation from missing validation in instruction bodies.
+6. **Permissionless design patterns**: FPs from intentional cranker/relayer patterns where non-signer accounts are by design. Prompt v0.5.0 should add DeFi pattern awareness.
+7. **Helper function opacity**: Programs using external util modules (auction-house `crate::utils::*`) cannot have those functions verified in single-file analysis.
 
 ## Exploit Confirmation Summary
 
@@ -303,3 +381,4 @@ Full details: [real-world-targets/anchor-escrow/EXPLOIT_REPORT.md](real-world-ta
 | `real-world-targets/CATALOG.md` | Full corpus catalog with metadata |
 | `exploits/exploit_solana_staking_*.py` | Python simulation exploits for solana-staking |
 | `exploits/exploit_anchor_escrow_*.py` | Python simulation exploit for anchor-escrow |
+| `research/BATCH3_METRICS.md` | Metrics for 5 additional programs (batch 3) |
