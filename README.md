@@ -194,6 +194,20 @@ We validated the analyzer against 4 real open-source Solana programs to measure 
 
 Every finding was manually classified against source code. Full methodology and per-finding evaluation: [RESEARCH_REPORT.md](RESEARCH_REPORT.md).
 
+### Real-World Exploit Execution: anchor-multisig
+
+The 2 true positives in anchor-multisig were confirmed end-to-end:
+
+1. **Compiled** the 280-line program to SBF binary (`cargo-build-sbf`, anchor-lang 0.29.0)
+2. **Executed bankrun exploits** against the compiled `multisig.so`
+
+| Vulnerability | Bankrun Result | Evidence |
+|--------------|---------------|----------|
+| Zero threshold | **CONFIRMED** | `execute_transaction` passed threshold check (0 < 0 = false), CPI invoked with 0 approvals |
+| Empty owners | **CONFIRMED** | `create_transaction` always fails — funds permanently locked |
+
+This is a complete evidence chain: **semantic finding → code review → binary compilation → bankrun execution → vulnerability confirmed on real open-source code**. Details: [EXPLOIT_REPORT.md](real-world-targets/anchor-multisig/EXPLOIT_REPORT.md).
+
 ## Limitations
 
 - **LLM dependence**: Semantic analysis quality depends on the model. We use claude-sonnet for the best balance of speed and capability.
