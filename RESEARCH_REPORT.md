@@ -212,16 +212,39 @@ Complete evidence chain: **Semantic finding → Code review → Binary compilati
 
 Full details: [real-world-targets/anchor-multisig/EXPLOIT_REPORT.md](real-world-targets/anchor-multisig/EXPLOIT_REPORT.md)
 
+### solana-staking: Python Simulation Exploits
+
+Solana toolchain (cargo-build-sbf) not available in environment. Python simulations faithfully model program state as dataclasses.
+
+| Finding | Simulation | Result |
+|---------|-----------|--------|
+| Incomplete unstake (SEM-001) | `exploit_solana_staking_001_incomplete_unstake.py` | **CONFIRMED** — NFT remains in vault after unstake |
+| Missing signer (SEM-002) | `exploit_solana_staking_002_missing_signer.py` | **CONFIRMED** — attacker calls unstake for victim |
+
+Evidence chain: **Semantic finding → Code review → Python simulation → Vulnerability confirmed**.
+
+Full details: [real-world-targets/solana-staking/EXPLOIT_REPORT.md](real-world-targets/solana-staking/EXPLOIT_REPORT.md)
+
+### anchor-escrow: Python Simulation Exploit
+
+| Finding | Simulation | Result |
+|---------|-----------|--------|
+| Cancel without signer (SEM-001) | `exploit_anchor_escrow_001_cancel_without_signer.py` | **CONFIRMED** — attacker cancels escrow without initializer signature |
+
+Evidence chain: **Semantic finding → Code review → Python simulation → Vulnerability confirmed**.
+
+Full details: [real-world-targets/anchor-escrow/EXPLOIT_REPORT.md](real-world-targets/anchor-escrow/EXPLOIT_REPORT.md)
+
 ## True Findings Summary
 
 | # | Program | Bug | Severity | Confirmed? |
 |---|---------|-----|----------|-----------|
 | 1 | anchor-multisig | Zero threshold bypasses multisig | Critical | Bankrun CONFIRMED |
 | 2 | anchor-multisig | Empty owners locks funds | Critical | Bankrun CONFIRMED |
-| 3 | solana-staking | Unstake never returns NFT | Critical | Manual review |
-| 4 | solana-staking | Missing Signer on unstake | High | Manual review |
-| 5 | anchor-swap | NonZeroU64 panic on small amounts | High | Likely TP |
-| 6 | anchor-escrow | Cancel without Signer (DoS) | High | Likely TP |
+| 3 | solana-staking | Unstake never returns NFT | Critical | Simulation CONFIRMED |
+| 4 | solana-staking | Missing Signer on unstake | High | Simulation CONFIRMED |
+| 5 | anchor-escrow | Cancel without Signer (DoS) | High | Simulation CONFIRMED |
+| 6 | anchor-swap | NonZeroU64 panic on small amounts | High | Likely TP (not simulated) |
 
 ## Conclusions
 
@@ -253,6 +276,19 @@ Full details: [real-world-targets/anchor-multisig/EXPLOIT_REPORT.md](real-world-
 4. **Context window**: Large programs (2900+ lines) approach limits for detailed analysis.
 5. **Static scanner blind spot**: Cannot distinguish manual validation from missing validation in instruction bodies.
 
+## Exploit Confirmation Summary
+
+| Method | Programs | Findings Confirmed |
+|--------|---------|-------------------|
+| Bankrun (SBF binary) | anchor-multisig | 2 (zero threshold, empty owners) |
+| Python simulation | solana-staking | 2 (incomplete unstake, missing signer) |
+| Python simulation | anchor-escrow | 1 (cancel without signer DoS) |
+| **Total confirmed** | **3 programs** | **5 findings** |
+
+**KNOW**: 5 of 6 true/likely-true findings have been confirmed via exploit execution (bankrun or simulation). The remaining finding (anchor-swap NonZeroU64) is an edge-case panic that requires specific Serum DEX state to trigger.
+
+**Limitation**: Python simulations model program logic faithfully but do not execute against real Solana runtime. Bankrun confirmation (against compiled SBF binary) is strictly stronger evidence. The 2 anchor-multisig findings have bankrun confirmation; the 3 simulation-confirmed findings would benefit from bankrun execution when Solana toolchain is available.
+
 ## Research Files
 
 | File | Description |
@@ -263,4 +299,7 @@ Full details: [real-world-targets/anchor-multisig/EXPLOIT_REPORT.md](real-world-
 | `research/BATCH2_IMPROVEMENT.md` | Before/after measurement of v0.3.0 → v0.4.0 |
 | `research/ITERATION_LOG.md` | Version tracking and improvement history |
 | `real-world-targets/*/classification.md` | Per-program finding classifications |
+| `real-world-targets/*/EXPLOIT_REPORT.md` | Per-program exploit execution reports |
 | `real-world-targets/CATALOG.md` | Full corpus catalog with metadata |
+| `exploits/exploit_solana_staking_*.py` | Python simulation exploits for solana-staking |
+| `exploits/exploit_anchor_escrow_*.py` | Python simulation exploit for anchor-escrow |
