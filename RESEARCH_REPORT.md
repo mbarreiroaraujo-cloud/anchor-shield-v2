@@ -93,6 +93,35 @@
 
 3. **anchor-swap: NonZeroU64 panic** — A likely true positive where passing a sub-lot-size amount causes a panic via `NonZeroU64::new(0).unwrap()`. Edge case DoS.
 
+## Real-World Exploit Execution
+
+### anchor-multisig: Compilation + Bankrun Exploits
+
+The 2 true positive findings from anchor-multisig were tested end-to-end: source code → compilation → bankrun exploit execution against the compiled SBF binary.
+
+**Compilation**: SUCCESS — `cargo-build-sbf` with anchor-lang 0.29.0 produced `multisig.so` (223,688 bytes).
+
+| Finding | Compilation | Bankrun Exploit | Result |
+|---------|------------|-----------------|--------|
+| Zero threshold (SEM-001) | Compiled | Executed against SBF binary | **CONFIRMED** — threshold check bypassed, CPI invoked with 0 approvals |
+| Empty owners (SEM-002) | Compiled | Executed against SBF binary | **CONFIRMED** — create_transaction always fails, funds permanently locked |
+
+**Key evidence for zero-threshold exploit**:
+- Bankrun loaded the compiled `multisig.so` binary
+- `execute_transaction` was dispatched (Anchor log: `Instruction: ExecuteTransaction`)
+- The threshold check passed: `sig_count(0) < threshold(0)` evaluates to `false`
+- CPI was invoked (`Program 111...111 invoke [2]`), proving full authorization bypass
+- CPI failed on account permissions, not on multisig authorization
+
+**Key evidence for empty-owners exploit**:
+- `create_transaction` rejected for any proposer (no valid owner exists)
+- 50 SOL held by multisig PDA remained permanently locked
+- No recovery mechanism exists in the program
+
+This represents a complete evidence chain: **Semantic finding → Code review → Binary compilation → Bankrun execution → Vulnerability confirmed on a real open-source program**.
+
+Full details: [real-world-targets/anchor-multisig/EXPLOIT_REPORT.md](real-world-targets/anchor-multisig/EXPLOIT_REPORT.md)
+
 ## Conclusions
 
 **KNOW** (verified empirically):
