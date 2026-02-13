@@ -2,8 +2,8 @@
   "meta": {
     "tool": "anchor-shield-v2",
     "version": "0.3.0",
-    "timestamp": "2026-02-13T09:49:14.935796+00:00",
-    "analysis_time_seconds": 14.2,
+    "timestamp": "2026-02-13T10:03:21.853219+00:00",
+    "analysis_time_seconds": 22.5,
     "target": "/home/user/anchor-shield-v2/examples/vulnerable-lending",
     "route": "BANKRUN"
   },
@@ -86,6 +86,20 @@
       "status": "CONFIRMED",
       "execution_mode": "bankrun",
       "output_snippet": "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n EXPLOIT: Integer Overflow + Division by Zero (SEM-003/004)\n Target: vulnerable_lending::liquidate()\n Binary: vuln_lending.so (compiled SBF)\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n--- TEST A: Integer Overflow ---\n\n[1] Overflow scenario:\n    borrowed: 1000000000 lamports\n    interest_rate: 500, total_borrows: 36893488147\n    Honest interest: 18446744073500000000000 (overflows u64)\n    u64 wrapped:     18446743864157"
+    },
+    {
+      "file": "bankrun_exploit_multisig_001_zero_threshold.ts",
+      "title": "Multisig 001 Zero Threshold",
+      "status": "CONFIRMED",
+      "execution_mode": "bankrun",
+      "output_snippet": "===========================================================\n EXPLOIT: Zero Threshold Bypass on anchor-multisig\n Target: multisig::create_multisig() + execute_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: H2DKPWRxuEaBZk2BqufeeZzM9E4suDfNdF8FTzYDifrf\n    Threshold: 0 (ZERO \u2014 the vulnerability)\n    Owners: 2 (2EGZSYSC..., 4TKTknNJ...)\n    PDA signer: 6nuKpSYY3QY8gH66ien"
+    },
+    {
+      "file": "bankrun_exploit_multisig_002_empty_owners.ts",
+      "title": "Multisig 002 Empty Owners",
+      "status": "CONFIRMED",
+      "execution_mode": "bankrun",
+      "output_snippet": "===========================================================\n EXPLOIT: Empty Owners List Locks Funds on anchor-multisig\n Target: multisig::create_multisig() + create_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: DYaxZo3fbXQ9T7PhMymD6C4ysfKzEXKmGKeezA3BDnbZ\n    Owners: [] (EMPTY \u2014 the vulnerability)\n    Threshold: 0\n    PDA signer: AXb1PA6xDfEhPTcW8uMYZZUuhgiDv8wVWuYwK"
     }
   ],
   "python_exploits": [
@@ -118,9 +132,9 @@
     "static_pattern_matches": 0,
     "logic_bugs_by_llm": 4,
     "exploits_generated": 3,
-    "bankrun_exploits_confirmed": 3,
+    "bankrun_exploits_confirmed": 5,
     "python_exploits_simulated": 3,
-    "exploits_confirmed": 6,
+    "exploits_confirmed": 8,
     "logic_bugs_missed_by_regex": 4
   }
 }
