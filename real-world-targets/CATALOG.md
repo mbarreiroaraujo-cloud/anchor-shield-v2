@@ -16,6 +16,11 @@ Programs acquired for real-world I+D validation of anchor-shield-v2's semantic a
 | 8 | sol-vault | Token vault | Clish254/sol-vault | 359 | No | 2 | 0 | 0 | 3 | 0 |
 | 9 | solana-staking | NFT staking | rpajo/solana-staking | 204 | No (prototype) | 2 | 2 | 0 | 3 | 0 |
 | 10 | nft-staking-shuk | NFT staking | 0xShuk/NFT-Staking-Program | 170 | No | 2 | — | — | — | — |
+| 11 | anchor-tictactoe | Game | coral-xyz/anchor (tests/) | 213 | Framework test | 1 | 1 | 0 | 2 | 0 |
+| 12 | anchor-cashiers-check | Escrow | coral-xyz/anchor (tests/) | 180 | Framework test | 1 | 0 | 0 | 3 | 0 |
+| 13 | anchor-ido-pool | IDO/Token sale | coral-xyz/anchor (tests/) | 675 | Framework test | 1 | 0 | 0 | 3 | 0 |
+| 14 | anchor-cfo | DEX fees | coral-xyz/anchor (tests/) | 995 | Framework test | 1 | 0 | 0 | 3 | 0 |
+| 15 | anchor-auction-house | NFT marketplace | coral-xyz/anchor (tests/) | 1745 | Framework test | 1 | 1 | 1 | 10 | 3 |
 
 ### Sealevel-Attacks Calibration (11 vulnerability categories)
 
@@ -50,9 +55,11 @@ Programs acquired for real-world I+D validation of anchor-shield-v2's semantic a
 
 ## Aggregate Statistics
 
-- **Total programs**: 21 (10 main + 11 sealevel calibration)
-- **Total lines analyzed**: ~12,000+
-- **True Positives found**: 4 (anchor-multisig x2, solana-staking x2)
-- **Likely True Positives**: 2 (anchor-swap, anchor-escrow)
-- **False Positive rate**: 9.7% (3/31 semantic findings)
+- **Total programs**: 26 (15 main + 11 sealevel calibration)
+- **Total lines analyzed**: ~16,000+
+- **True Positives found**: 6 (anchor-multisig x2, solana-staking x2, anchor-tictactoe, anchor-auction-house)
+- **Likely True Positives**: 3 (anchor-swap, anchor-escrow, anchor-auction-house)
+- **False Positive rate**: 10.3% (6/58 semantic findings)
 - **Bankrun confirmed**: 2 (anchor-multisig zero-threshold, empty-owners)
+- **Simulation confirmed**: 3 (solana-staking x2, anchor-escrow)
+- **Detector versions**: v0.3.0 → v0.4.0 → v0.5.0 (2 improvement cycles)
