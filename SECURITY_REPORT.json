@@ -2,8 +2,8 @@
   "meta": {
     "tool": "anchor-shield-v2",
     "version": "0.3.0",
-    "timestamp": "2026-02-13T11:05:19.334745+00:00",
-    "analysis_time_seconds": 26.8,
+    "timestamp": "2026-02-13T11:11:49.485723+00:00",
+    "analysis_time_seconds": 26.3,
     "target": "/home/user/anchor-shield-v2/examples/vulnerable-lending",
     "route": "BANKRUN"
   },
@@ -92,14 +92,14 @@
       "title": "Multisig 001 Zero Threshold",
       "status": "CONFIRMED",
       "execution_mode": "bankrun",
-      "output_snippet": "===========================================================\n EXPLOIT: Zero Threshold Bypass on anchor-multisig\n Target: multisig::create_multisig() + execute_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: 5efHQL34yfw22pZSffv7u11dvNynNNbjqyRcvF29nPC6\n    Threshold: 0 (ZERO \u2014 the vulnerability)\n    Owners: 2 (8f6yvhSc..., AiYFDNdH...)\n    PDA signer: 6TcCX3R5CqGaQVYWdg8"
+      "output_snippet": "===========================================================\n EXPLOIT: Zero Threshold Bypass on anchor-multisig\n Target: multisig::create_multisig() + execute_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: Cneu5sbXPUHm7YXEKYTSrjGrGqP6RRydXYRbGNU6vQKJ\n    Threshold: 0 (ZERO \u2014 the vulnerability)\n    Owners: 2 (QkYvW35s..., 8YcJxckN...)\n    PDA signer: BWKPbp6rLtL8Dt5gn5G"
     },
     {
       "file": "bankrun_exploit_multisig_002_empty_owners.ts",
       "title": "Multisig 002 Empty Owners",
       "status": "CONFIRMED",
       "execution_mode": "bankrun",
-      "output_snippet": "===========================================================\n EXPLOIT: Empty Owners List Locks Funds on anchor-multisig\n Target: multisig::create_multisig() + create_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: 3YYSULBKRoKHLjx9f35U1h5xwnm1A2yu7piFKcTWRTcC\n    Owners: [] (EMPTY \u2014 the vulnerability)\n    Threshold: 0\n    PDA signer: HEKbicT7tu4y9vawfV41gdXQbWc1CtjYqAL5f"
+      "output_snippet": "===========================================================\n EXPLOIT: Empty Owners List Locks Funds on anchor-multisig\n Target: multisig::create_multisig() + create_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: 4KvmtNraWWdUrNjTvtZE3cybLBBHZQXrW5JugvhC928Q\n    Owners: [] (EMPTY \u2014 the vulnerability)\n    Threshold: 0\n    PDA signer: DGzSxEZXdn2g3uxsyrQDP3vtT5EA43JnqQE9r"
     }
   ],
   "python_exploits": [
