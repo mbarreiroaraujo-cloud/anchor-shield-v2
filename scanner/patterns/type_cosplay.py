@@ -82,13 +82,24 @@ class TypeCosplayPattern(VulnerabilityPattern):
                 if field_name.endswith("_signer") or field_name == "pda_account":
                     continue
 
+                # Skip if has_one or close constraint — account is validated by Anchor
+                if re.search(r"\bhas_one\s*=|\bclose\s*=", context_block):
+                    continue
+
+                # Skip if any constraint expression — developer added explicit validation
+                if re.search(r"\bconstraint\s*=", context_block):
+                    continue
+
+                # UncheckedAccount is a deliberate Anchor choice — lower severity
+                effective_severity = "Low" if type_name == "UncheckedAccount" else self.severity
+
                 snippet = self._extract_snippet(content, actual_line)
 
                 findings.append(
                     Finding(
                         id=self.id,
                         name=self.name,
-                        severity=self.severity,
+                        severity=effective_severity,
                         file=file_path,
                         line=actual_line,
                         description=(

@@ -65,6 +65,10 @@ EXPLICIT FALSE POSITIVE PATTERNS — NEVER REPORT THESE:
 4. "negative timestamp" — Clock sysvar always returns current epoch time (positive).
 5. "double approval via boolean flag array" — boolean arrays are idempotent. `signers[i] = true` when already `true` has no effect. Do not flag as double-counting or replay attacks.
 6. "account type confusion" when the program uses Anchor's `Account<'info, T>` typed wrapper — Anchor validates discriminators automatically.
+7. "account data not zeroed after closing" — when an account's lamports are set to 0, the Solana runtime automatically garbage-collects it at end of slot (zeros data, resets owner to system program). Explicit data zeroing is defense-in-depth, not a vulnerability.
+8. "buyer/seller/user not required as Signer in execute/match/settle" — many DeFi protocols use a permissionless cranker/relayer pattern where BOTH parties consent via separate instructions (e.g., buy+sell create trade states) and then anyone can execute the match. This is intentional and safe when both parties already committed via signed trade-state creation instructions.
+9. "parameter values could mismatch between accounts" when those parameters are part of PDA seeds — if the same instruction argument is used in multiple PDA seed derivations, Anchor's seeds constraint ensures all PDAs were derived with the same value. PDA seeds ARE the validation.
+10. "UncheckedAccount could be spoofed" when the account is only passed through to a CPI — if the account is not read or written by the current program and is only forwarded to another program via CPI, the callee program performs its own validation. This is standard Solana CPI practice and often necessary for stack size management.
 
 DO NOT REPORT:
 - Missing /// CHECK comments (Anchor documentation convention, not a bug)
