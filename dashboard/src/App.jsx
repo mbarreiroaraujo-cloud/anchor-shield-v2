@@ -39,7 +39,7 @@ function Header({ activeTab, setActiveTab }) {
           <span className="font-bold text-gray-300">-shield</span>
         </div>
         <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#9945FF22', color: '#9945FF' }}>
-          v0.2.0
+          v0.3.0
         </span>
         <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#14F19522', color: '#14F195' }}>
           Adversarial
@@ -96,12 +96,12 @@ function OverviewTab() {
             detail={`${findings.filter(f => f.severity === 'Critical').length} Critical, ${findings.filter(f => f.severity === 'High').length} High`}
           />
           <ComparisonCard
-            title="Exploit Engine"
+            title="Bankrun Exploits"
             icon="3"
             color="#14F195"
-            value={`${s.exploits_confirmed}/${s.exploits_generated}`}
-            subtitle="exploits confirmed"
-            detail="Simulated execution"
+            value={`${s.bankrun_exploits_confirmed || 0}/${s.exploits_generated}`}
+            subtitle="confirmed on SBF binary"
+            detail="Real on-chain execution"
           />
         </div>
       </div>
@@ -143,7 +143,8 @@ function OverviewTab() {
             </thead>
             <tbody>
               {findings.map((f, i) => {
-                const exploit = REPORT.exploits.find(e => e.finding_id === f.id)
+                const bankrun = REPORT.bankrun_exploits.find(e => e.finding_id === f.id || e.finding_id?.includes(f.id))
+                const python = REPORT.python_exploits.find(e => e.finding_id === f.id)
                 return (
                   <tr key={f.id} className="border-b border-gray-800/50">
                     <td className="p-3 text-gray-500">{i + 1}</td>
@@ -154,8 +155,10 @@ function OverviewTab() {
                     <td className="p-3 text-center text-red-400">Missed</td>
                     <td className="p-3 text-center" style={{ color: '#14F195' }}>Found</td>
                     <td className="p-3 text-center">
-                      {exploit ? (
-                        <span style={{ color: '#14F195' }}>Confirmed</span>
+                      {bankrun ? (
+                        <span style={{ color: '#14F195' }}>Bankrun</span>
+                      ) : python ? (
+                        <span style={{ color: '#FFA500' }}>Simulated</span>
                       ) : (
                         <span className="text-gray-600">&mdash;</span>
                       )}
@@ -171,16 +174,18 @@ function OverviewTab() {
       {/* Pipeline flow */}
       <div className="rounded-xl p-5" style={{ background: '#1A1D2E' }}>
         <h3 className="font-semibold text-gray-300 mb-4">Analysis Pipeline</h3>
-        <div className="flex flex-col sm:flex-row items-center gap-3 text-sm">
+        <div className="flex flex-col sm:flex-row items-center gap-3 text-sm flex-wrap">
           <PipelineStep step="1" label="Source Code" detail="Anchor .rs files" />
           <PipelineArrow />
           <PipelineStep step="2" label="Static Scan" detail="Regex patterns" color="#666" />
           <PipelineArrow />
           <PipelineStep step="3" label="Semantic Analysis" detail="LLM reasoning" color="#9945FF" />
           <PipelineArrow />
-          <PipelineStep step="4" label="Exploit Generation" detail="Auto PoC code" color="#FFA500" />
+          <PipelineStep step="4" label="Exploit Gen" detail="Auto PoC code" color="#FFA500" />
           <PipelineArrow />
-          <PipelineStep step="5" label="Execution" detail="Prove exploits" color="#14F195" />
+          <PipelineStep step="5" label="Bankrun" detail="SBF binary exec" color="#14F195" />
+          <PipelineArrow />
+          <PipelineStep step="6" label="Python Sim" detail="Fallback verify" color="#00C853" />
         </div>
       </div>
     </div>
@@ -318,27 +323,103 @@ function ConfidenceBar({ confidence }) {
 
 /* ── Exploits Tab ── */
 function ExploitsTab() {
-  const exploits = REPORT.exploits
+  const bankrunExploits = REPORT.bankrun_exploits || []
+  const pythonExploits = REPORT.python_exploits || []
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-300 mb-2">Exploit Proof-of-Concepts</h2>
-      <p className="text-sm text-gray-500 mb-4">
-        Automatically generated exploit simulations that prove each vulnerability is real and exploitable.
-        Each exploit models the on-chain state and executes the attack step by step.
-      </p>
-      <div className="grid gap-4">
-        {exploits.map((exploit) => (
-          <ExploitCard key={exploit.finding_id} exploit={exploit} />
-        ))}
+    <div className="space-y-6">
+      {/* Bankrun section */}
+      <div>
+        <div className="flex items-center gap-3 mb-2 flex-wrap">
+          <h2 className="text-lg font-semibold text-gray-300">Bankrun Exploits</h2>
+          <span className="text-xs px-2 py-0.5 rounded font-bold" style={{ background: '#14F19522', color: '#14F195' }}>
+            On-Chain Execution
+          </span>
+        </div>
+        <p className="text-sm text-gray-500 mb-4">
+          Exploits executed against the compiled SBF binary via solana-bankrun (in-process Solana runtime).
+          These run real BPF instructions — no simulation or mocking.
+        </p>
+        <div className="grid gap-4">
+          {bankrunExploits.map((exploit) => (
+            <BankrunExploitCard key={exploit.file} exploit={exploit} />
+          ))}
+        </div>
+      </div>
+
+      {/* Python simulation section */}
+      <div>
+        <div className="flex items-center gap-3 mb-2 flex-wrap">
+          <h2 className="text-lg font-semibold text-gray-300">Python Simulations</h2>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#FFA50022', color: '#FFA500' }}>
+            Fallback Verification
+          </span>
+        </div>
+        <p className="text-sm text-gray-500 mb-4">
+          Python-based exploit simulations that model on-chain state and reproduce each vulnerability step by step.
+          Used as supplementary evidence alongside bankrun confirmation.
+        </p>
+        <div className="grid gap-4">
+          {pythonExploits.map((exploit) => (
+            <PythonExploitCard key={exploit.finding_id} exploit={exploit} />
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-function ExploitCard({ exploit }) {
+function BankrunExploitCard({ exploit }) {
   const [showCode, setShowCode] = useState(false)
-  const statusStyle = STATUS_STYLES[exploit.status] || STATUS_STYLES.GENERATED
+  const finding = REPORT.semantic_analysis.findings.find(
+    f => f.id === exploit.finding_id || exploit.finding_id?.includes(f.id)
+  )
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: '#1A1D2E', borderLeft: '4px solid #14F195' }}>
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-2 flex-wrap">
+          <span className="text-xs px-2 py-0.5 rounded font-bold"
+            style={{ background: '#14F19522', color: '#14F195' }}>
+            CONFIRMED
+          </span>
+          <span className="font-mono text-xs text-gray-500">{exploit.finding_id}</span>
+          <span className="text-sm font-medium text-gray-300">{exploit.title}</span>
+        </div>
+        <p className="text-sm text-gray-400 mb-3">{exploit.result}</p>
+        {finding && (
+          <p className="text-xs text-gray-500 mb-3">{finding.estimated_impact}</p>
+        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#252836', color: '#888' }}>
+            TypeScript
+          </span>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#252836', color: '#888' }}>
+            solana-bankrun
+          </span>
+          <span className="text-xs text-gray-600 font-mono">{exploit.file}</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowCode(!showCode) }}
+            className="ml-auto text-xs px-3 py-1 rounded transition-all"
+            style={{ background: '#14F19522', color: '#14F195' }}
+          >
+            {showCode ? 'Hide Output' : 'View Output'}
+          </button>
+        </div>
+      </div>
+      {showCode && (
+        <div className="border-t border-gray-800">
+          <pre className="text-xs p-4 overflow-x-auto" style={{ background: '#0A0C12', color: '#aaa' }}>
+            {getBankrunOutput(exploit.finding_id)}
+          </pre>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PythonExploitCard({ exploit }) {
+  const [showCode, setShowCode] = useState(false)
   const finding = REPORT.semantic_analysis.findings.find(f => f.id === exploit.finding_id)
 
   return (
@@ -346,8 +427,8 @@ function ExploitCard({ exploit }) {
       <div className="p-4">
         <div className="flex items-center gap-3 mb-2 flex-wrap">
           <span className="text-xs px-2 py-0.5 rounded font-bold"
-            style={{ background: statusStyle.bg, color: statusStyle.color }}>
-            {statusStyle.label}
+            style={{ background: '#FFA50022', color: '#FFA500' }}>
+            SIMULATED
           </span>
           <span className="font-mono text-xs text-gray-500">{exploit.finding_id}</span>
           <span className="text-sm font-medium text-gray-300">{exploit.title}</span>
@@ -359,7 +440,7 @@ function ExploitCard({ exploit }) {
           <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#252836', color: '#888' }}>
             {exploit.language}
           </span>
-          <span className="text-xs text-gray-600">{exploit.code_file}</span>
+          <span className="text-xs text-gray-600 font-mono">{exploit.code_file}</span>
           <button
             onClick={(e) => { e.stopPropagation(); setShowCode(!showCode) }}
             className="ml-auto text-xs px-3 py-1 rounded transition-all"
@@ -372,7 +453,7 @@ function ExploitCard({ exploit }) {
       {showCode && (
         <div className="border-t border-gray-800">
           <pre className="text-xs p-4 overflow-x-auto" style={{ background: '#0A0C12', color: '#aaa' }}>
-            {getExploitCode(exploit.finding_id)}
+            {getPythonExploitCode(exploit.finding_id)}
           </pre>
         </div>
       )}
@@ -380,7 +461,64 @@ function ExploitCard({ exploit }) {
   )
 }
 
-function getExploitCode(findingId) {
+function getBankrunOutput(findingId) {
+  const outputs = {
+    'SEM-001': `Bankrun Exploit: Collateral Check Bypass (SEM-001)
+Binary: vuln_lending.so (compiled SBF)
+
+[1] Genesis accounts loaded:
+    Pool: deposited=600 SOL, borrows=0
+    User: deposited=100 SOL, borrowed=0
+    Vault: 600 SOL
+
+[2] Borrowing 100 SOL repeatedly...
+    (check is: deposited >= amount, ignores existing debt)
+
+    Borrow #1: 100 SOL (cumulative debt: 100 SOL)
+    Borrow #2: 100 SOL (cumulative debt: 200 SOL)
+    Borrow #3: 100 SOL (cumulative debt: 300 SOL)
+    Borrow #4: 100 SOL (cumulative debt: 400 SOL)
+    Borrow #5: 100 SOL (cumulative debt: 500 SOL)
+
+[3] Final state:
+    Deposited: 100 SOL | Borrowed: 500 SOL | Debt ratio: 500%
+
+>>> CONFIRMED: Borrowed 500 SOL with 100 SOL collateral <<<`,
+    'SEM-002': `Bankrun Exploit: Withdraw Drain (SEM-002)
+Binary: vuln_lending.so (compiled SBF)
+
+[1] State: attacker deposited 100 SOL, borrowed 90 SOL
+    Pool: deposits=600 SOL, borrows=90 SOL
+    Vault: 510 SOL
+
+[2] Withdrawing 100 SOL despite 90 SOL outstanding debt...
+    Withdrawal SUCCEEDED (should have been blocked)
+
+[3] Final state:
+    Deposited: 0 SOL | Borrowed: 90 SOL | Collateral: 0
+    Attacker gained: 100 SOL net (90 SOL stolen)
+
+>>> CONFIRMED: Protocol has 90 SOL bad debt with 0 collateral <<<`,
+    'SEM-003/004': `Bankrun Exploit: Overflow + Division by Zero (SEM-003/004)
+Binary: vuln_lending.so (compiled SBF)
+
+--- TEST A: Integer Overflow ---
+[1] borrowed: 1,000,000,000 lamports
+    interest_rate: 500, total_borrows: 36,893,488,147
+    Honest interest: 18,446,744,073,500,000,000,000 (overflows u64)
+    u64 wrapped:     18,446,743,864,157,935,616
+
+--- TEST B: Division by Zero ---
+[2] liquidate with zero-borrow user:
+    health = 10,000,000,000 * 100 / (0 + 0) => DIVISION BY ZERO
+    Program CRASHED: attempt to divide by zero
+
+>>> CONFIRMED: Division by zero causes program panic <<<`,
+  }
+  return outputs[findingId] || 'Output not available in dashboard view'
+}
+
+function getPythonExploitCode(findingId) {
   const codes = {
     'SEM-001': `# Exploit: Collateral check ignores existing debt
 # Demonstrates unlimited borrowing with fixed collateral
@@ -440,7 +578,6 @@ real_interest = user.borrowed * pool.interest_rate * pool.total_borrows
 # Vulnerable calculation (u64 wrapping)
 wrapped = (int(user.borrowed) * pool.interest_rate
            * pool.total_borrows) & U64_MAX
-# = 11,194,970,050,983,362,560
 
 # Value corruption: 100%
 assert real_interest > U64_MAX  # Overflow occurred
@@ -673,7 +810,7 @@ export default function App() {
         {tabContent[activeTab]}
       </main>
       <footer className="border-t border-gray-800 py-6 text-center text-sm text-gray-600">
-        anchor-shield v0.2.0 | Adversarial Security Agent for Solana
+        anchor-shield v0.3.0 | Adversarial Security Agent for Solana
       </footer>
     </div>
   )

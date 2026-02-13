@@ -2,8 +2,8 @@
   "meta": {
     "tool": "anchor-shield",
     "version": "0.2.0",
-    "timestamp": "2026-02-13T00:14:13.367793+00:00",
-    "analysis_time_seconds": 15.4,
+    "timestamp": "2026-02-13T00:23:12.688071+00:00",
+    "analysis_time_seconds": 15.6,
     "target": "/home/user/anchor-shield/examples/vulnerable-lending",
     "route": "LLM-ONLY"
   },

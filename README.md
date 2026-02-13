@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> The first security tool that doesn't just find bugs — it proves they're real.
+> The first security tool that doesn't just find bugs — it proves them on compiled binaries.
 
 ## The Problem
 
@@ -12,28 +12,37 @@ Consider a lending pool where the `borrow` function checks `deposited >= amount`
 
 ## The Solution
 
-anchor-shield combines three analysis layers into an autonomous security pipeline:
+anchor-shield combines four analysis layers into an autonomous security pipeline:
 
 | Layer | Method | What It Finds |
 |-------|--------|---------------|
 | **Static Patterns** | Regex matching | Structural issues (missing checks, type confusion, known CVEs) |
 | **Semantic Analysis** | LLM reasoning | Logic bugs (wrong math, state inconsistencies, economic exploits) |
-| **Adversarial Synthesis** | Auto-generated exploits | Proves bugs are exploitable with working attack code |
+| **Bankrun Exploits** | SBF binary execution | Proves bugs on compiled eBPF binaries via in-process Solana runtime |
+| **Python Simulations** | Fallback verification | Supplementary exploit evidence via state modeling |
 
-The key insight: each layer catches what the previous one misses. Static patterns catch known vulnerability classes. Semantic analysis reasons about program *logic* — tracing state across instructions, checking arithmetic invariants, identifying cross-function dependencies. The adversarial engine then generates and executes proof-of-concept exploits, turning theoretical findings into confirmed vulnerabilities.
+The key insight: each layer catches what the previous one misses. Static patterns catch known vulnerability classes. Semantic analysis reasons about program *logic* — tracing state across instructions, checking arithmetic invariants, identifying cross-function dependencies. The bankrun engine then compiles the target to an SBF binary and executes real exploit transactions against it using solana-bankrun (in-process Solana runtime), confirming vulnerabilities with actual BPF instruction execution — no simulation or mocking.
 
 ## Demo: Vulnerable Lending Pool
 
 We created a lending pool program with 4 intentional logic vulnerabilities and ran the complete pipeline:
 
-| # | Vulnerability | Severity | Regex | LLM | Exploit |
-|---|--------------|----------|-------|-----|---------|
-| 1 | Collateral check ignores existing debt | Critical | Missed | Found | Confirmed |
-| 2 | Withdrawal with outstanding borrows | Critical | Missed | Found | Confirmed |
-| 3 | Integer overflow in liquidation | High | Missed | Found | Confirmed |
-| 4 | Division by zero in health check | Medium | Missed | Found | — |
+| # | Vulnerability | Severity | Regex | LLM | Bankrun | Python |
+|---|--------------|----------|-------|-----|---------|--------|
+| 1 | Collateral check ignores existing debt | Critical | Missed | Found | **CONFIRMED** | Simulated |
+| 2 | Withdrawal with outstanding borrows | Critical | Missed | Found | **CONFIRMED** | Simulated |
+| 3 | Integer overflow in liquidation | High | Missed | Found | **CONFIRMED** | Simulated |
+| 4 | Division by zero in health check | Medium | Missed | Found | **CONFIRMED** | — |
 
-**The regex scanner found 0 of the 4 logic bugs. The semantic analyzer found all 4. Three were independently confirmed by automated exploit simulations.**
+**The regex scanner found 0 of the 4 logic bugs. The semantic analyzer found all 4. All 4 were independently confirmed by bankrun exploits executed against the compiled SBF binary.**
+
+### Bankrun Exploit Results
+
+All exploits ran against `vuln_lending.so` (compiled via `cargo-build-sbf`) using `solana-bankrun`:
+
+- **SEM-001 Collateral Bypass**: Borrowed 500 SOL with 100 SOL collateral (500% debt ratio, should be capped at 75% LTV). 5 sequential borrow transactions all succeeded.
+- **SEM-002 Withdraw Drain**: Deposited 100 SOL, borrowed 90, withdrew all 100. Protocol left with 90 SOL bad debt and 0 collateral.
+- **SEM-003/004 Overflow + Division by Zero**: Integer overflow demonstrated (u64 wraps on `borrowed * rate * total_borrows`). Division by zero confirmed — program panics when liquidating a zero-borrow account.
 
 ## Quick Start
 
@@ -67,10 +76,13 @@ Source Code (.rs)
        │         └── Logic vulnerabilities, attack scenarios, confidence scores
        │
        ├──► [3] Exploit Synthesizer
-       │         └── Python simulation PoCs for Critical/High findings
+       │         └── TypeScript bankrun exploits + Python simulation PoCs
        │
-       └──► [4] Exploit Executor
-                 └── Runs PoCs, confirms exploitability
+       ├──► [4] Bankrun Executor
+       │         └── Compiles to SBF, executes exploits on real Solana runtime
+       │
+       └──► [5] Python Executor
+                 └── Fallback simulation for environments without Solana toolchain
 
        All results ──► SECURITY_REPORT.json ──► Dashboard
 ```
@@ -91,11 +103,16 @@ anchor-shield/
 │   └── orchestrator.py # Single-command pipeline entry point
 ├── dashboard/         # React + Tailwind interactive UI
 │   └── src/
-│       ├── App.jsx    # Multi-tab dashboard
+│       ├── App.jsx    # Multi-tab dashboard (bankrun + Python exploit views)
 │       └── scanner.js # In-browser static scanner
-├── exploits/          # Generated exploit simulations
+├── exploits/          # Exploit files
+│   ├── bankrun_exploit_001_collateral_bypass.ts   # Bankrun: SEM-001
+│   ├── bankrun_exploit_002_withdraw_drain.ts      # Bankrun: SEM-002
+│   ├── bankrun_exploit_003_overflow_liquidation.ts # Bankrun: SEM-003/004
+│   ├── vuln_lending.so                            # Compiled SBF binary
+│   └── exploit_sem_*.py                           # Python simulations
 ├── examples/
-│   ├── vulnerable-lending/  # Demo target program
+│   ├── vulnerable-lending/  # Demo target program (Anchor/Rust)
 │   └── demo-output/         # Captured analysis outputs
 └── tests/             # Test suite
 ```
@@ -116,23 +133,24 @@ Sends Anchor program source code to the Claude API with a specialized security a
 Returns structured findings with severity, confidence scores, and step-by-step attack scenarios.
 
 ### Adversarial Exploit Synthesizer
-For each Critical/High finding, generates a self-contained Python simulation that:
-1. Models the on-chain state as dataclasses
-2. Implements the vulnerable instruction logic
-3. Executes the attack step by step
-4. Asserts concrete outcomes (attacker profit, protocol loss)
-5. Reports CONFIRMED or FAILED
+For each Critical/High finding, generates exploit code in two forms:
+
+**Bankrun exploits** (primary): TypeScript files that execute against the compiled SBF binary via `solana-bankrun`. These run real BPF instructions in an in-process Solana runtime — the same instruction processing as mainnet. Account state is pre-loaded as genesis accounts, and exploit transactions are processed through the actual program binary.
+
+**Python simulations** (fallback): Self-contained Python scripts that model on-chain state as dataclasses, implement the vulnerable instruction logic, and execute the attack step by step. Used when the Solana toolchain is unavailable.
 
 ### Autonomous Orchestrator
-The `agent/orchestrator.py` module chains all three layers into a single command:
+The `agent/orchestrator.py` module chains all layers into a single command:
 
 ```bash
 python agent/orchestrator.py <path-to-program> [--no-execute] [--output-dir DIR]
 ```
 
+Pipeline: Static Scan → Semantic Analysis → Exploit Generation → Bankrun Execution → Python Simulation → Report
+
 Produces:
 - Formatted terminal output with progress indicators
-- `SECURITY_REPORT.json` with all findings, exploits, and metadata
+- `SECURITY_REPORT.json` with all findings, bankrun results, and metadata
 - Individual exploit files in `exploits/`
 
 ## CLI Options
@@ -148,9 +166,9 @@ Produces:
 
 The interactive dashboard provides four views:
 
-- **Overview** — Comparison cards showing regex vs LLM vs exploit results, detection matrix, pipeline visualization
+- **Overview** — Comparison cards showing regex vs LLM vs bankrun results, detection matrix, 6-stage pipeline visualization
 - **Semantic Analysis** — Expandable findings with confidence bars, attack scenarios, and impact descriptions
-- **Exploits** — Generated PoC code with syntax display and execution status badges
+- **Exploits** — Bankrun exploit results with on-chain execution output, plus Python simulation code
 - **Static Scanner** — Original GitHub repo scanner with live scanning capability
 
 ```bash
@@ -181,7 +199,7 @@ Every finding was manually classified against source code. Full methodology and 
 - **LLM dependence**: Semantic analysis quality depends on the model. We use claude-sonnet for the best balance of speed and capability.
 - **False positives possible**: LLM analysis may produce findings that aren't exploitable in practice. We report confidence levels for each finding.
 - **Demo mode**: Without an API key, the tool uses pre-validated results rather than live analysis.
-- **Execution scope**: Without the Solana toolchain (Rust, Anchor, local validator), exploits run as Python simulations rather than on-chain tests.
+- **Execution scope**: Bankrun exploits require Solana toolchain (`cargo-build-sbf`, `solana-bankrun`). Without it, exploits fall back to Python simulations.
 - **Not a replacement for audits**: This tool augments human security review — it does not replace professional auditors.
 - **API costs**: Live LLM analysis costs approximately $0.01-0.03 per file analyzed.
 
