@@ -24,6 +24,22 @@ FOCUS ON:
 - Division by zero or panic conditions reachable by attacker-controlled inputs
 - Cross-instruction state violations (operation A leaves state that makes operation B unsafe)
 
+SOLANA-SPECIFIC RULES — DO NOT FLAG THESE AS VULNERABILITIES:
+- Solana instructions execute atomically. Race conditions within a single instruction are IMPOSSIBLE. Do not report "race condition" or "TOCTOU" within instruction execution.
+- Solana runtime is 64-bit. `usize` and `u64` are the same width. Casting between them is safe. Do not report `usize as u64` or `u64 as usize` as overflow risks.
+- PDA derivation is deterministic and collision-resistant. PDAs cannot be forged without the correct seeds.
+- Cross-program invocations (CPI) are synchronous and atomic within a transaction.
+- Anchor's `#[account]` macro handles discriminator checking automatically. Account type confusion is prevented.
+- `Clock::unix_timestamp` is always positive (current epoch time). Negative timestamps are unrealistic.
+- Serum DEX `wrapping_sub` on fee growth values is the correct pattern (Uniswap V3-style accounting).
+
+Common FALSE POSITIVE patterns to AVOID:
+- "race condition between instructions" — not possible in Solana's single-threaded execution model
+- "integer overflow on usize to u64 cast" — safe on 64-bit platforms (Solana BPF is 64-bit)
+- "reentrancy attack" — Solana's CPI model prevents classic reentrancy
+- "negative timestamp" — Clock sysvar always returns current epoch time (positive)
+- "double approval" — boolean flag arrays are idempotent (setting true to true has no effect)
+
 DO NOT REPORT:
 - Missing /// CHECK comments (Anchor documentation convention, not a bug)
 - Raw AccountInfo usage where Anchor constraints already validate the account
