@@ -70,6 +70,18 @@ class TypeCosplayPattern(VulnerabilityPattern):
                 if re.search(r"///\s*CHECK\s*:", context_block):
                     continue
 
+                # Skip if PDA (seeds constraint) — PDA address is validation
+                if re.search(r"\bseeds\s*=", context_block):
+                    continue
+
+                # Skip if address constraint — explicit pubkey validation
+                if re.search(r"\baddress\s*=", context_block):
+                    continue
+
+                # Skip common PDA signer field names
+                if field_name.endswith("_signer") or field_name == "pda_account":
+                    continue
+
                 snippet = self._extract_snippet(content, actual_line)
 
                 findings.append(

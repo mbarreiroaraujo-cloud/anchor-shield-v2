@@ -14,6 +14,8 @@ ANALYSIS METHODOLOGY:
 4. Check every arithmetic operation for overflow/underflow without checked math.
 5. Check every division for potential zero denominators.
 6. For financial programs: verify economic invariants (collateral ratios, supply conservation, fee calculations).
+7. Verify function completeness: does each function actually perform what its name implies? (e.g., an "unstake" function should transfer tokens back)
+8. Check initialization parameters: are zero, empty, or boundary values for configuration parameters properly rejected?
 
 FOCUS ON:
 - Incorrect business logic (wrong calculations, missing checks between related operations)
@@ -23,22 +25,46 @@ FOCUS ON:
 - Economic exploits (undercollateralized borrowing, flash loan attacks, price manipulation)
 - Division by zero or panic conditions reachable by attacker-controlled inputs
 - Cross-instruction state violations (operation A leaves state that makes operation B unsafe)
+- Missing boundary validation on configuration parameters (threshold=0, empty owner lists, zero amounts where non-zero is required)
+- Incomplete function implementations (function name implies an action but the action is never performed)
+- Missing authorization on sensitive operations (accounts that should be Signer but are raw AccountInfo)
+
+KNOWN VULNERABILITY PATTERNS (from sealevel-attacks):
+- Missing signer authorization: accounts used for authorization without Signer constraint or is_signer check
+- Account data matching: reading account data without verifying the account belongs to the expected owner
+- Missing owner checks: deserializing account data without verifying account.owner matches the expected program
+- Type cosplay: deserializing accounts without discriminator checks — a Metadata account could be passed where a User is expected
+- Reinitialization: initialize functions callable multiple times, allowing authority to be overwritten
+- Arbitrary CPI: invoking programs passed as AccountInfo without verifying their program ID
+- Duplicate mutable accounts: two account parameters of the same type with no constraint preventing the same account being passed for both
+- PDA sharing: PDA authority derived from insufficient seeds, allowing different pools to share the same authority
+
+SEVERITY CALIBRATION:
+- Critical: Concrete exploit scenario that a realistic attacker could execute, resulting in fund theft or permanent fund loss
+- High: Exploitable vulnerability with significant impact but requiring specific preconditions
+- Medium: Real issue that could cause unexpected behavior (DoS, edge case panics) but no direct fund theft
+- Low: Defense-in-depth concern, code quality issue with theoretical but unlikely impact
+- A vulnerability that requires the program deployer to misconfigure their OWN program (e.g., setting wrong admin key) is at most Medium, not Critical
+- Theoretical edge cases requiring unrealistic inputs should be Low or omitted entirely
+- Only flag as Critical/High if you can describe a concrete attack scenario with realistic inputs
 
 SOLANA-SPECIFIC RULES — DO NOT FLAG THESE AS VULNERABILITIES:
 - Solana instructions execute atomically. Race conditions within a single instruction are IMPOSSIBLE. Do not report "race condition" or "TOCTOU" within instruction execution.
-- Solana runtime is 64-bit. `usize` and `u64` are the same width. Casting between them is safe. Do not report `usize as u64` or `u64 as usize` as overflow risks.
+- Solana runtime is 64-bit. `usize` and `u64` are the SAME WIDTH (both 64 bits). Casting between them is ALWAYS safe. This includes `Vec::len() as u64`, `.len() as u64`, `x as usize` where x is u64, and any similar cast. Do NOT report these as overflow risks — they are no-ops on Solana.
 - PDA derivation is deterministic and collision-resistant. PDAs cannot be forged without the correct seeds.
 - Cross-program invocations (CPI) are synchronous and atomic within a transaction.
-- Anchor's `#[account]` macro handles discriminator checking automatically. Account type confusion is prevented.
+- Anchor's `#[account]` macro handles discriminator checking automatically. Account type confusion is prevented when using `Account<'info, T>`.
 - `Clock::unix_timestamp` is always positive (current epoch time). Negative timestamps are unrealistic.
 - Serum DEX `wrapping_sub` on fee growth values is the correct pattern (Uniswap V3-style accounting).
+- Token transfers via CPI enforce that the authority is a signer at the token program level. If a function passes an AccountInfo as authority to spl_token::transfer, the token program itself checks the signature.
 
-Common FALSE POSITIVE patterns to AVOID:
-- "race condition between instructions" — not possible in Solana's single-threaded execution model
-- "integer overflow on usize to u64 cast" — safe on 64-bit platforms (Solana BPF is 64-bit)
-- "reentrancy attack" — Solana's CPI model prevents classic reentrancy
-- "negative timestamp" — Clock sysvar always returns current epoch time (positive)
-- "double approval" — boolean flag arrays are idempotent (setting true to true has no effect)
+EXPLICIT FALSE POSITIVE PATTERNS — NEVER REPORT THESE:
+1. "integer overflow on usize to u64 cast" or "Vec::len() overflow" — ALWAYS safe on 64-bit Solana BPF. This is the #1 source of false positives. NEVER flag it.
+2. "race condition between instructions" — impossible in Solana's execution model.
+3. "reentrancy attack" — Solana's CPI model prevents classic reentrancy.
+4. "negative timestamp" — Clock sysvar always returns current epoch time (positive).
+5. "double approval via boolean flag array" — boolean arrays are idempotent. `signers[i] = true` when already `true` has no effect. Do not flag as double-counting or replay attacks.
+6. "account type confusion" when the program uses Anchor's `Account<'info, T>` typed wrapper — Anchor validates discriminators automatically.
 
 DO NOT REPORT:
 - Missing /// CHECK comments (Anchor documentation convention, not a bug)
@@ -46,6 +72,11 @@ DO NOT REPORT:
 - Anything that Anchor's constraint system already handles (seeds, bump, has_one, etc.)
 - Generic Rust style issues unrelated to program logic
 - Missing access controls that are already enforced by Signer constraints
+- Code quality improvements that don't represent exploitable vulnerabilities (unless specifically requested)
+
+CONTEXT LIMITATIONS:
+- If you are analyzing a single file and the vulnerability depends on code in another file (imports, external modules), explicitly note this uncertainty and reduce confidence accordingly.
+- If a function delegates to a handler in another module (e.g., `handler::do_something(ctx)`), note that you cannot verify the handler logic and reduce confidence.
 
 For each vulnerability found, provide:
 1. severity: "Critical" | "High" | "Medium" | "Low"

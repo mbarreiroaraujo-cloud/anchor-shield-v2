@@ -74,6 +74,18 @@ class MissingOwnerPattern(VulnerabilityPattern):
                 if re.search(r"///\s*CHECK\s*:", attrs_str):
                     continue
 
+                # Skip if PDA (seeds constraint) — PDA address itself is validation
+                if re.search(r"\bseeds\s*=", attrs_str):
+                    continue
+
+                # Skip if address constraint — explicit pubkey validation
+                if re.search(r"\baddress\s*=", attrs_str):
+                    continue
+
+                # Skip common PDA signer field names
+                if field_name.endswith("_signer") or field_name == "pda_account":
+                    continue
+
                 snippet = self._extract_snippet(content, actual_line)
 
                 findings.append(
