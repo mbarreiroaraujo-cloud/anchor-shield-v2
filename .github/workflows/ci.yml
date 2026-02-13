@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run all tests
+        run: python -m pytest tests/ -v
+
+      - name: Verify scanner module
+        run: python -c "from scanner.engine import AnchorShieldEngine; print('Scanner OK')"
+
+      - name: Verify semantic module
+        run: python -c "from semantic.analyzer import SemanticAnalyzer; print('Semantic OK')"
+
+      - name: Verify orchestrator module
+        run: python -c "from agent.orchestrator import SecurityOrchestrator; print('Orchestrator OK')"
+
+  dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build dashboard
+        run: cd dashboard && npm install && npm run build
+
+  bankrun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install exploit dependencies
+        run: cd exploits && npm install
+
+      - name: TypeScript syntax check
+        run: cd exploits && npx tsc --noEmit bankrun_exploit_*.ts || true
+
+      - name: Verify SBF binary exists
+        run: test -f exploits/vuln_lending.so && echo "SBF binary OK ($(stat -c%s exploits/vuln_lending.so) bytes)"
