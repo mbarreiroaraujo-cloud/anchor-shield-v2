@@ -1,0 +1,38 @@
+
+═══════════════════════════════════════════════════════════
+  anchor-shield-v2 — Adversarial Security Agent for Solana
+═══════════════════════════════════════════════════════════
+
+  Target: real-world-targets/solana-staking
+  Source: lib.rs (204 lines)
+
+[1/5] Static scan...
+      6 regex patterns checked                    done
+      Static matches: 1
+
+[2/5] Semantic analysis (code review)...
+      Analyzing 204 lines of Rust...
+      ┌─────────────────────────────────────────────────┐
+      │ SEM-001 CRITICAL  Incomplete unstake — NFT permanently locked │
+      │ SEM-002 HIGH     Missing signer on unstake — unauthorized access │
+      └─────────────────────────────────────────────────┘
+      2 logic bugs found (invisible to regex)
+
+[3/5] Compiled SBF binary...
+      skinflip_staking.so (233 KB)    compiled
+
+[4/5] Bankrun exploits available...
+      bankrun_exploit_staking_001_incomplete_unstake.ts  available
+      bankrun_exploit_staking_002_missing_signer.ts  available
+
+[5/5] Executing on Solana runtime (bankrun)...
+      bankrun_exploit_staking_001_incomplete_unstake... CONFIRMED
+      bankrun_exploit_staking_002_missing_signer... CONFIRMED
+
+═══════════════════════════════════════════════════════════
+  RESULT: 2 vulnerabilities found AND proven on-chain
+  Binary: skinflip_staking.so (233 KB, cargo-build-sbf)
+  Runtime: solana-bankrun (in-process Solana validator)
+  Semantic findings: 2 | Bankrun confirmed: 2
+═══════════════════════════════════════════════════════════
+
