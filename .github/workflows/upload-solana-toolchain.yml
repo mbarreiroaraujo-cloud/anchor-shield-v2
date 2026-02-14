@@ -1,0 +1,31 @@
+name: Upload Solana Toolchain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Solana CLI
+        run: |
+          curl -L "https://release.anza.xyz/stable/solana-release-x86_64-unknown-linux-gnu.tar.bz2" \
+            -o solana-release-x86_64-unknown-linux-gnu.tar.bz2
+          ls -lh solana-release-x86_64-unknown-linux-gnu.tar.bz2
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: solana-toolchain
+          name: Solana Toolchain for CI/CD
+          body: |
+            Solana CLI + cargo-build-sbf for restricted environments.
+            ```bash
+            curl -L "https://github.com/mbarreiroaraujo-cloud/anchor-shield-v2/releases/download/solana-toolchain/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o /tmp/solana.tar.bz2
+            tar -xjf /tmp/solana.tar.bz2 -C $HOME/
+            export PATH="$HOME/solana-release/bin:$PATH"
+            solana --version
+            ```
+          files: solana-release-x86_64-unknown-linux-gnu.tar.bz2
