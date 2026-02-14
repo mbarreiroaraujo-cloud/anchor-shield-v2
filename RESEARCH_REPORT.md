@@ -179,6 +179,12 @@ Ported ProgramAccount→Account, ProgramResult→Result<()>, #[error]→#[error_
 
 ### KNOW (confirmed by bankrun on compiled SBF binaries)
 
+**Execution evidence**: All TPs have bankrun execution logs saved in
+`exploits/*_execution.log`. Each log contains verbatim stdout/stderr
+from `npx ts-node <exploit>.ts` run against the compiled SBF binary
+loaded into solana-bankrun's in-process validator. Summary table in
+[EXECUTION_EVIDENCE.md](EXECUTION_EVIDENCE.md).
+
 - **anchor-multisig**: zero threshold bypass + empty owners lock (2 TPs, multisig.so 219KB)
 - **anchor-tictactoe**: inverted constraint deadlock (1 TP, tictactoe.so 203KB)
 - **anchor-escrow**: cancel without signer (1 TP, anchor_escrow.so 258KB)

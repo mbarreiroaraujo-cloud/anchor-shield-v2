@@ -105,12 +105,11 @@ anchor-shield-v2/
 │   └── src/
 │       ├── App.jsx    # Multi-tab dashboard (bankrun + Python exploit views)
 │       └── scanner.js # In-browser static scanner
-├── exploits/          # Exploit files
-│   ├── bankrun_exploit_001_collateral_bypass.ts   # Bankrun: SEM-001
-│   ├── bankrun_exploit_002_withdraw_drain.ts      # Bankrun: SEM-002
-│   ├── bankrun_exploit_003_overflow_liquidation.ts # Bankrun: SEM-003/004
-│   ├── vuln_lending.so                            # Compiled SBF binary
-│   └── exploit_sem_*.py                           # Python simulations
+├── exploits/          # Exploit files (9 bankrun exploits, 5 compiled binaries)
+│   ├── bankrun_exploit_*.ts                       # 9 bankrun exploit scripts
+│   ├── *_execution.log                            # 9 verbatim execution logs
+│   ├── *.so                                       # 5 compiled SBF binaries
+│   └── exploit_sem_*.py                           # Python simulations (legacy)
 ├── examples/
 │   ├── vulnerable-lending/  # Demo target program (Anchor/Rust)
 │   └── demo-output/         # Captured analysis outputs
