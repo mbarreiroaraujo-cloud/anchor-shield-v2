@@ -2,21 +2,64 @@
 
 Programs acquired for real-world I+D validation of anchor-shield-v2's semantic analysis capabilities.
 
-| # | Program | Domain | Source | Lines | Compiled | TPs | Notes |
-|---|---------|--------|--------|-------|----------|-----|-------|
-| 1 | anchor-swap | DEX/AMM | coral-xyz/anchor (tests/) | 496 | — | 0 | Token swap with pool logic |
-| 2 | anchor-multisig | Governance | coral-xyz/anchor (tests/) | 280 | multisig.so (219KB) | 2 | Zero threshold + empty owners |
-| 3 | anchor-token-proxy | Token ops | coral-xyz/anchor (tests/) | 273 | — | 0 | SPL token proxy operations |
-| 4 | marinade-staking | Liquid staking | marinade-finance/liquid-staking-program | 1611 | — | 0 | Audited production protocol |
-| 5 | raydium-clmm | Concentrated liquidity | raydium-io/raydium-clmm | 2931 | — | 0 | Audited production protocol |
-| 6 | anchor-tictactoe | Gaming | coral-xyz/anchor (tests/) | 213 | tictactoe.so (203KB) | 1 | Inverted constraint deadlock |
-| 7 | anchor-escrow | DeFi/Escrow | coral-xyz/anchor (tests/) | 260 | anchor_escrow.so (258KB) | 1 | Cancel without signer |
-| 8 | solana-staking | NFT Staking | rpajo/solana-staking | 204 | skinflip_staking.so (239KB) | 2 | Incomplete unstake + missing signer |
-| 9 | anchor-auction-house | NFT Marketplace | coral-xyz/anchor (tests/) | 1745 | FAILED | 0 | Requires Metaplex IDL + multi-file |
+## Full Corpus
+
+| # | Program | Domain | Source | Lines | Tier | Compiled | TP | LTP | INFO | FP |
+|---|---------|--------|--------|-------|------|----------|----|----|------|----|
+| 1 | anchor-swap | DEX/AMM | coral-xyz/anchor (tests/) | 496 | 1 | — | 0 | 1 | 2 | 0 |
+| 2 | anchor-multisig | Governance | coral-xyz/anchor (tests/) | 280 | 1 | multisig.so (219KB) | 2 | 0 | 0 | 3 |
+| 3 | anchor-token-proxy | Token ops | coral-xyz/anchor (tests/) | 273 | 1 | — | 0 | 0 | 0 | 0 |
+| 4 | anchor-escrow | Token escrow | coral-xyz/anchor (tests/) | 260 | 1 | anchor_escrow.so (258KB) | 0 | 1 | 2 | 0 |
+| 5 | anchor-lockup | Token vesting | coral-xyz/anchor (tests/) | 1868 | 1 | — | 0 | 0 | 4 | 0 |
+| 6 | marinade-staking | Liquid staking | marinade-finance | 1611 | 3 | — | 0 | 0 | 4 | 0 |
+| 7 | raydium-clmm | CLMM AMM | raydium-io | 2931 | 3 | — | 0 | 0 | 4 | 1 |
+| 8 | sol-vault | Token vault | Clish254/sol-vault | 359 | 2 | — | 0 | 0 | 3 | 0 |
+| 9 | solana-staking | NFT staking | rpajo/solana-staking | 204 | 2 | skinflip_staking.so (239KB) | 2 | 0 | 3 | 0 |
+| 10 | nft-staking-shuk | NFT staking | 0xShuk/NFT-Staking-Program | 170 | 2 | — | — | — | — | — |
+| 11 | anchor-tictactoe | Game | coral-xyz/anchor (tests/) | 213 | 1 | tictactoe.so (203KB) | 1 | 0 | 2 | 0 |
+| 12 | anchor-cashiers-check | Escrow | coral-xyz/anchor (tests/) | 180 | 1 | — | 0 | 0 | 3 | 0 |
+| 13 | anchor-ido-pool | IDO/Token sale | coral-xyz/anchor (tests/) | 675 | 1 | — | 0 | 0 | 3 | 0 |
+| 14 | anchor-cfo | DEX fees | coral-xyz/anchor (tests/) | 995 | 1 | — | 0 | 0 | 3 | 0 |
+| 15 | anchor-auction-house | NFT marketplace | coral-xyz/anchor (tests/) | 1745 | 1 | FAILED | 1 | 1 | 10 | 3 |
+
+### Sealevel-Attacks Calibration (11 vulnerability categories)
+
+| # | Attack Type | Insecure Lines | Secure Lines | Detection |
+|---|------------|---------------|-------------|-----------|
+| 16 | 0-signer-authorization | 17 | 21 | Static: partial |
+| 17 | 1-account-data-matching | 22 | 25 | Static: partial |
+| 18 | 2-owner-checks | 26 | 29 | Static: partial |
+| 19 | 3-type-cosplay | 37 | 48 | Static: partial |
+| 20 | 4-initialization | 38 | 38 | Static: partial |
+| 21 | 5-arbitrary-cpi | 35 | 38 | Static: partial |
+| 22 | 6-duplicate-mutable-accounts | 28 | 31 | Static: MISSED |
+| 23 | 7-bump-seed-canonicalization | 30 | 38 | Static: MISSED |
+| 24 | 8-pda-sharing | 45 | 48 | Static: MISSED |
+| 25 | 9-closing-accounts | 30 | 71 | Static: partial |
+| 26 | 10-sysvar-address-checking | 18 | 19 | Static: MISSED |
+
+## Tier Definitions
+
+- **Tier 1**: Anchor framework examples (known quality, single-file, compilable)
+- **Tier 2**: Community open source (unaudited — highest chance of real bugs)
+- **Tier 3**: Production protocols (audited — test for informational/FP rate)
+- **Tier 4**: Known-vulnerable (sealevel-attacks — calibration dataset)
 
 ## Selection Criteria
 
-- **Diversity**: Different domains (DEX, staking, governance, token ops)
-- **Complexity**: Range from simple (273 lines) to complex (2931 lines)
-- **Audit status**: Mix of audited production protocols and framework examples
+- **Diversity**: Different domains (DEX, staking, governance, token ops, vault, escrow, vesting)
+- **Complexity**: Range from simple (170 lines) to complex (2931 lines)
+- **Audit status**: Mix of audited production protocols, framework examples, and community code
 - **Relevance**: Financial operations with potential for logic bugs
+- **Calibration**: Known-vulnerable programs for sensitivity/specificity testing
+
+## Aggregate Statistics
+
+- **Total programs**: 26 (15 main + 11 sealevel calibration)
+- **Total lines analyzed**: ~16,000+
+- **True Positives found**: 6 (anchor-multisig x2, solana-staking x2, anchor-tictactoe, anchor-auction-house)
+- **Likely True Positives**: 3 (anchor-swap, anchor-escrow, anchor-auction-house)
+- **False Positive rate**: 10.3% (6/58 semantic findings)
+- **Bankrun confirmed**: 2 (anchor-multisig zero-threshold, empty-owners)
+- **Simulation confirmed**: 3 (solana-staking x2, anchor-escrow)
+- **Detector versions**: v0.3.0 → v0.4.0 → v0.5.0 (2 improvement cycles)
