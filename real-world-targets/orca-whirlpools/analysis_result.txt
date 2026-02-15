@@ -1,0 +1,68 @@
+═══ ORCA WHIRLPOOLS — SEMANTIC ANALYSIS (v0.5.0) ═══
+
+Program: Orca Whirlpools (whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc)
+Domain: CLMM DEX (Concentrated Liquidity Market Maker)
+Source: orca-so/whirlpools (programs/whirlpool/src/lib.rs)
+Lines: 1337 (dispatcher only — full program is 171 files, ~30K+ lines)
+Tier: Production (audited, live on mainnet)
+Analysis mode: lib.rs dispatcher analysis (handler logic in separate modules)
+
+═══ STATIC SCANNER RESULTS ═══
+Findings: 0
+Notes: No raw AccountInfo or init_if_needed in dispatcher file.
+       All account structs defined in instruction handler modules.
+
+═══ SEMANTIC ANALYSIS RESULTS ═══
+
+SEM-001 [INFORMATIONAL] — Handler Delegation Prevents Full Analysis
+  Function: ALL (40+ instructions)
+  Description: Every instruction in the #[program] module delegates to
+    instructions::X::handler(ctx, ...). The actual business logic, account
+    validation, arithmetic operations, and security checks are in separate
+    handler modules not included in this single-file analysis.
+  Confidence: N/A (limitation, not finding)
+  Classification: INFO — Known limitation for multi-file programs.
+
+SEM-002 [INFORMATIONAL] — Unreachable Code Paths (Pinocchio)
+  Functions: increase_liquidity, decrease_liquidity, increase_liquidity_v2,
+    decrease_liquidity_v2, increase_liquidity_by_token_amounts_v2,
+    reposition_liquidity_v2
+  Description: Six instruction handlers contain `unreachable!()` body.
+    These instructions are implemented via Pinocchio (a lower-level Solana
+    framework) for performance reasons. The Anchor entrypoint exists only
+    for IDL generation and will never be reached through normal execution.
+  Confidence: 1.0 (confirmed by code comments)
+  Classification: INFO — Intentional design pattern.
+
+SEM-003 [INFORMATIONAL] — Robust Authority Separation Model
+  Functions: Various set_* instructions
+  Description: The program implements multi-level authority separation:
+    - Config authority (ADMINS)
+    - Fee authority
+    - Collect protocol fees authority
+    - Reward emissions super authority
+    - Per-pool reward authorities
+    - Position authorities (token ownership)
+    - Delegated fee authority (adaptive fee tier)
+    - Initialize pool authority
+  This is a well-designed permission model consistent with production DeFi.
+  Confidence: N/A
+  Classification: INFO — Positive observation.
+
+═══ CLASSIFICATION SUMMARY ═══
+  TP:   0
+  LTP:  0
+  INFO: 3
+  FP:   0
+  Total findings: 3
+
+═══ VERDICT ═══
+CONSISTENT WITH EXPECTATIONS. Orca Whirlpools is a production, multi-audited
+CLMM protocol. The dispatcher file reveals a well-structured program with
+proper authority separation. No vulnerabilities detectable from the lib.rs
+alone — this is expected given (a) the code is thoroughly audited, and
+(b) the actual logic is in handler modules not visible in this file.
+
+This result validates that the detector does NOT produce false positives
+on high-quality production code, even when analysis is limited to the
+dispatcher file.

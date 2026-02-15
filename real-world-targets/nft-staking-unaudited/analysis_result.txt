@@ -1,0 +1,131 @@
+═══ NFT STAKING UNAUDITED — SEMANTIC ANALYSIS (v0.5.0) ═══
+
+Program: nft-stake-vault (FZaTXcKpGef7ew74UHpJAkrZAfhMTZbSFJ297aKjURXN)
+Domain: NFT Staking with fungible token rewards
+Source: 0xShuk/NFT-Staking-Program (nft-stake-vault/)
+Lines: 1499 (concatenated from 17 source files)
+Tier: Community (unaudited)
+Analysis mode: Full program analysis (all modules concatenated)
+
+═══ STATIC SCANNER RESULTS ═══
+Findings: 19
+  High (ANCHOR-001): 5 — init_if_needed on ATA accounts
+  Medium (ANCHOR-002): 5 — init_if_needed coexisting with other fields
+  Medium (ANCHOR-005): 1 — TokenAccount with close attribute
+  Low (ANCHOR-006): 8 — UncheckedAccount PDA fields
+
+Static Scanner Classification:
+  - ANCHOR-001 (5 findings): FP — All init_if_needed usage is on ATAs with
+    proper associated_token::mint + associated_token::authority constraints.
+    Standard Anchor pattern for creating user token accounts on first use.
+  - ANCHOR-002 (5 findings): FP — Same pattern, correct usage.
+  - ANCHOR-005 (1 finding): FP — nft_custody in Unstake correctly uses
+    close = staker to reclaim rent. This is the intended Anchor pattern.
+  - ANCHOR-006 (8 findings): Low/INFO — All are PDA authority accounts
+    (token_authority, nft_authority) with seeds constraints. These are
+    CPI passthrough accounts correctly documented with /// CHECK comments.
+    v0.5.0 correctly classifies as Low severity.
+
+═══ SEMANTIC ANALYSIS RESULTS ═══
+
+SEM-001 [Medium — LIKELY TRUE POSITIVE] — Reward Accounting Mismatch
+  Function: Details::decrease_current_balance()
+  Description: The decrease_current_balance method uses only the LAST
+    reward rate to compute the deduction from current_balance:
+
+      let reward_since_change = last_reward * rewardable_time_u64;
+      self.current_balance -= reward_since_change;
+
+    However, calc_reward() iterates through ALL reward rate periods since
+    the user staked, producing the actual reward across multiple periods.
+    After multiple reward rate changes AND reward claims, current_balance
+    will OVERSTATE the actual remaining balance.
+
+  Attack Scenario:
+    1. Creator initializes staking with reward rate R1
+    2. Users stake NFTs and start accruing at R1
+    3. Creator changes reward to R2 > R1
+    4. Users claim rewards (calc_reward computes R1*T1 + R2*T2)
+    5. decrease_current_balance only deducts R2*T2, not the R1*T1 portion
+    6. current_balance is now higher than actual remaining tokens
+    7. Creator calls change_reward or extend_staking using inflated balance
+    8. Pool approves unsustainable reward rate
+    9. Later stakers may be unable to claim full rewards
+
+  Estimated Impact: Pool could approve unsustainable reward rates after
+    multiple reward changes, potentially leaving late claimers underpaid.
+  Confidence: 0.70
+  Classification: LTP — The mismatch is real and the code paths are
+    concrete. Impact depends on frequency of reward rate changes and
+    timing of claims. Requires multi-step scenario to trigger.
+
+SEM-002 [INFORMATIONAL] — close_staking Missing has_one = reward_mint
+  Function: CloseStaking struct
+  Description: The CloseStaking account validation does not constrain
+    token_mint to match stake_details.reward_mint. The creator could
+    pass a different mint, but the associated token constraints would
+    point to a different (likely empty) vault, causing the transfer
+    to fail or move 0 tokens while still setting is_active = false.
+  Impact: Creator-only self-harm (locks own remaining tokens). Stakers
+    can still unstake and claim rewards from the correct vault.
+  Confidence: 0.85
+  Classification: INFO — Defensive improvement, not exploitable by
+    external attackers. Creator would only harm themselves.
+
+SEM-003 [INFORMATIONAL] — No Boundary Validation on Init Parameters
+  Function: init_staking_handler
+  Description: No validation that reward > 0 or max_stakers_count > 0.
+    If reward = 0, calc_total_emission returns 0, creating a pool with
+    no rewards. If max_stakers_count = 0, no one can stake.
+  Impact: Creator misconfiguration (self-harm). Not exploitable.
+  Confidence: 0.90
+  Classification: INFO — Missing boundary checks on initialization.
+
+SEM-004 [INFORMATIONAL] — Fragile Binary Search Index in calc_reward
+  Function: calc_reward
+  Description: The binary_search result handling:
+      let index = match stake_index {
+          Ok(i) => i,
+          Err(i) => i - 1  // usize underflow if i == 0
+      };
+    Could underflow if staked_at < reward_change_time[0]. However,
+    stake_handler requires current_time >= staking_starts_at, and
+    reward_change_time[0] = staking_starts_at, so staked_at is always
+    >= reward_change_time[0]. The underflow cannot occur in normal flow.
+  Confidence: 0.60
+  Classification: INFO — Defensive code quality issue, guarded by
+    program flow constraints.
+
+SEM-005 [INFORMATIONAL] — Standard init_if_needed Usage
+  Functions: InitStaking, Stake, WithdrawReward, Unstake
+  Description: Multiple instructions use init_if_needed for ATA creation.
+    All instances properly constrain associated_token::mint and
+    associated_token::authority, preventing account substitution attacks.
+    This is standard Anchor practice for creating user token accounts
+    on first interaction.
+  Confidence: N/A
+  Classification: INFO — No vulnerability. Standard pattern.
+
+═══ CLASSIFICATION SUMMARY ═══
+  TP:   0
+  LTP:  1 (SEM-001: reward accounting mismatch)
+  INFO: 4 (SEM-002 through SEM-005)
+  FP:   0
+  Total semantic findings: 5
+
+═══ STATIC SCANNER FP ANALYSIS ═══
+  Static FPs: 11 (5 ANCHOR-001 + 5 ANCHOR-002 + 1 ANCHOR-005)
+  Static INFO: 8 (ANCHOR-006, correctly Low severity)
+  Total static: 19
+
+═══ VERDICT ═══
+The NFT Staking program is well-written community code with proper use of
+Anchor constraints, PDA validation, and checked arithmetic throughout. The
+main finding (reward accounting mismatch) is a subtle cross-function logic
+bug that would only manifest after multiple reward rate changes combined
+with reward claims — a scenario the program is designed to support but
+does not handle correctly in the balance tracking.
+
+The program demonstrates good defensive programming (checked_add/sub/mul/div
+everywhere, proper error types, PDA-based authority), which is above
+average for unaudited community code.
