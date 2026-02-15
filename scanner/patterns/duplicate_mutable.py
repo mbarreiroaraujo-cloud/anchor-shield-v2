@@ -40,6 +40,15 @@ class DuplicateMutablePattern(VulnerabilityPattern):
                 has_mut = bool(re.search(r"\bmut\b", attrs_str))
 
                 if has_init_if_needed:
+                    # v0.5.1: Skip associated_token fields with both mint and
+                    # authority constraints. ATAs have deterministic addresses
+                    # derived from (mint, authority), so they cannot collide
+                    # with other accounts by construction.
+                    is_ata = bool(re.search(r"associated_token\s*::", attrs_str))
+                    has_mint = bool(re.search(r"associated_token\s*::\s*mint\s*=", attrs_str))
+                    has_auth = bool(re.search(r"associated_token\s*::\s*authority\s*=", attrs_str))
+                    if is_ata and has_mint and has_auth:
+                        continue
                     init_if_needed_fields.append((field["name"], field["type"], field["line"]))
                 elif has_mut:
                     mutable_fields.append((field["name"], field["type"], field["line"]))

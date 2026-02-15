@@ -28,6 +28,7 @@ FOCUS ON:
 - Missing boundary validation on configuration parameters (threshold=0, empty owner lists, zero amounts where non-zero is required)
 - Incomplete function implementations (function name implies an action but the action is never performed)
 - Missing authorization on sensitive operations (accounts that should be Signer but are raw AccountInfo)
+- Accounting consistency: when a tracking field (e.g., balance, weight) is updated by a simplified calculation but the actual payout uses a more complex one (e.g., multi-period reward iteration vs single-period deduction), the tracking field drifts from reality over time
 
 KNOWN VULNERABILITY PATTERNS (from sealevel-attacks):
 - Missing signer authorization: accounts used for authorization without Signer constraint or is_signer check
