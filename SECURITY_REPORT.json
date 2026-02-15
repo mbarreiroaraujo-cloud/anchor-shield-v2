@@ -2,8 +2,8 @@
   "meta": {
     "tool": "anchor-shield-v2",
     "version": "0.3.0",
-    "timestamp": "2026-02-13T11:45:18.207879+00:00",
-    "analysis_time_seconds": 28.3,
+    "timestamp": "2026-02-15T11:55:09.428186+00:00",
+    "analysis_time_seconds": 40.3,
     "target": "/home/user/anchor-shield-v2/examples/vulnerable-lending",
     "route": "BANKRUN"
   },
@@ -88,18 +88,46 @@
       "output_snippet": "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n EXPLOIT: Integer Overflow + Division by Zero (SEM-003/004)\n Target: vulnerable_lending::liquidate()\n Binary: vuln_lending.so (compiled SBF)\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n--- TEST A: Integer Overflow ---\n\n[1] Overflow scenario:\n    borrowed: 1000000000 lamports\n    interest_rate: 500, total_borrows: 36893488147\n    Honest interest: 18446744073500000000000 (overflows u64)\n    u64 wrapped:     18446743864157"
     },
     {
+      "file": "bankrun_exploit_escrow_001_cancel_without_signer.ts",
+      "title": "Escrow 001 Cancel Without Signer",
+      "status": "CONFIRMED",
+      "execution_mode": "bankrun",
+      "output_snippet": "===========================================================\n EXPLOIT: Cancel Escrow Without Signer on anchor-escrow\n Target: escrow::cancel_escrow()\n Binary: anchor_escrow.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Escrow: 12fT6UfkMS5unT3wggu8Tmq3mnR7syyaWCrtTYzoe4cw\n    Initializer: 2UKFhoLWHREn... (NOT signing)\n    Attacker: AWR6GgDwa1Fu... (sends the tx)\n    Escrow PDA: 6hnzsygC91ien9E8CcSBKYuEpugegzMH"
+    },
+    {
       "file": "bankrun_exploit_multisig_001_zero_threshold.ts",
       "title": "Multisig 001 Zero Threshold",
       "status": "CONFIRMED",
       "execution_mode": "bankrun",
-      "output_snippet": "===========================================================\n EXPLOIT: Zero Threshold Bypass on anchor-multisig\n Target: multisig::create_multisig() + execute_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: BEJGpoStmu1Z9CvTRijPrPtrf13N7VB3HhFQEmfCeYEB\n    Threshold: 0 (ZERO \u2014 the vulnerability)\n    Owners: 2 (1LVeXrax..., FL5uyLJf...)\n    PDA signer: 7bxBj5jqeexEJ3Y7Srf"
+      "output_snippet": "===========================================================\n EXPLOIT: Zero Threshold Bypass on anchor-multisig\n Target: multisig::create_multisig() + execute_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: 8GAxfTbLzyPTtYqsyGKUHFdaysJMP3nJhLHZJgMjsXqj\n    Threshold: 0 (ZERO \u2014 the vulnerability)\n    Owners: 2 (EsgRV5Jd..., GgBhqPGB...)\n    PDA signer: 2R5iGtUNMBTt8ZEraRo"
     },
     {
       "file": "bankrun_exploit_multisig_002_empty_owners.ts",
       "title": "Multisig 002 Empty Owners",
       "status": "CONFIRMED",
       "execution_mode": "bankrun",
-      "output_snippet": "===========================================================\n EXPLOIT: Empty Owners List Locks Funds on anchor-multisig\n Target: multisig::create_multisig() + create_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: G4zVm9vAAxe4czgdF4zTKQRHeJh5izB3mNju3imMvztw\n    Owners: [] (EMPTY \u2014 the vulnerability)\n    Threshold: 0\n    PDA signer: Dw6zWQfSaT7JkPo1qajy1awe2sN8aWQrTk2wM"
+      "output_snippet": "===========================================================\n EXPLOIT: Empty Owners List Locks Funds on anchor-multisig\n Target: multisig::create_multisig() + create_transaction()\n Binary: multisig.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Multisig: EB9vtokqD3bfsV1X7WMeSB6y8MnapaWrRMDbLyP8dvjB\n    Owners: [] (EMPTY \u2014 the vulnerability)\n    Threshold: 0\n    PDA signer: 6RvszM9uqEXsFVAmpp1fK5m22CWs3bBPSs86s"
+    },
+    {
+      "file": "bankrun_exploit_staking_001_incomplete_unstake.ts",
+      "title": "Staking 001 Incomplete Unstake",
+      "status": "CONFIRMED",
+      "execution_mode": "bankrun",
+      "output_snippet": "===========================================================\n EXPLOIT: Incomplete Unstake on solana-staking\n Target: skinflip_staking::unstake()\n Binary: skinflip_staking.so (compiled from real program)\n===========================================================\n\n[1] Genesis state (simulates a staked NFT):\n    Staking machine: 3shAV11UVF7s...\n    Staked NFTs: 1\n    NFT holder: FLdbpzLYB1Tx...\n    NFT stake data: 8V1ZrTzjPJPc... (PDA)\n    Staked at: 1771152899 (1 hour ago)\n\n[2] Pre-unstake staked_"
+    },
+    {
+      "file": "bankrun_exploit_staking_002_missing_signer.ts",
+      "title": "Staking 002 Missing Signer",
+      "status": "CONFIRMED",
+      "execution_mode": "bankrun",
+      "output_snippet": "===========================================================\n EXPLOIT: Missing Signer on Unstake in solana-staking\n Target: skinflip_staking::unstake()\n Binary: skinflip_staking.so (compiled from real program)\n===========================================================\n\n[1] Genesis state:\n    Victim (NFT holder): HtkACkoVTb9d... (NOT signing)\n    Attacker:            H9aSvVGB84om... (sends tx)\n    Staked NFTs: 1\n    NFT staked 24 hours ago\n\n[2] EXPLOIT: Attacker calls unstake() for victim's NFT.."
+    },
+    {
+      "file": "bankrun_exploit_tictactoe_001_inverted_constraint.ts",
+      "title": "Tictactoe 001 Inverted Constraint",
+      "status": "CONFIRMED",
+      "execution_mode": "bankrun",
+      "output_snippet": "===========================================================\n EXPLOIT: Inverted Constraint Deadlock on anchor-tictactoe\n Target: tictactoe::player_join()\n Binary: tictactoe.so (compiled from real open-source program)\n===========================================================\n\n[1] Genesis state loaded:\n    Dashboard: 5tTmfqu5DmzrYYER6gmf1kpn8z2QJSEnntAoXbo1s4HZ\n    Game: 8vkkg9BRM9koQceCiczsajuUykFbQNYeoyZnF4hyMnyP\n    Player X: 9dRccETANb3i...\n    Player O: 363SzgmYmdkN...\n    Game state: 0 (Wai"
     }
   ],
   "python_exploits": [
@@ -128,77 +156,13 @@
       "code_file": "exploits/exploit_sem_003.py"
     }
   ],
-  "real_world_bankrun_exploits": [
-    {
-      "file": "bankrun_exploit_tictactoe_001_inverted_constraint.ts",
-      "program": "anchor-tictactoe",
-      "binary": "tictactoe.so",
-      "binary_size_bytes": 203792,
-      "title": "Inverted Constraint Deadlock",
-      "status": "CONFIRMED",
-      "execution_mode": "bankrun",
-      "anchor_version": "0.29.0",
-      "evidence": "AnchorError caused by account: game. Error Code: ConstraintRaw. Error Number: 2003. player_join requires game_state != 0 but state defaults to 0."
-    },
-    {
-      "file": "bankrun_exploit_escrow_001_cancel_without_signer.ts",
-      "program": "anchor-escrow",
-      "binary": "anchor_escrow.so",
-      "binary_size_bytes": 258656,
-      "title": "Cancel Escrow Without Signer",
-      "status": "CONFIRMED",
-      "execution_mode": "bankrun",
-      "anchor_version": "0.30.1",
-      "evidence": "Instruction: CancelEscrow logged. Error from CPI (UninitializedAccount), not from signer check. initializer is AccountInfo not Signer."
-    },
-    {
-      "file": "bankrun_exploit_staking_001_incomplete_unstake.ts",
-      "program": "solana-staking",
-      "binary": "skinflip_staking.so",
-      "binary_size_bytes": 239256,
-      "title": "Incomplete Unstake — NFT Permanently Locked",
-      "status": "CONFIRMED",
-      "execution_mode": "bankrun",
-      "anchor_version": "0.29.0",
-      "evidence": "unstake() returned Ok(). staked_nfts=1 before and after. No token::transfer CPI in function body."
-    },
-    {
-      "file": "bankrun_exploit_staking_002_missing_signer.ts",
-      "program": "solana-staking",
-      "binary": "skinflip_staking.so",
-      "binary_size_bytes": 239256,
-      "title": "Missing Signer on Unstake",
-      "status": "CONFIRMED",
-      "execution_mode": "bankrun",
-      "anchor_version": "0.29.0",
-      "evidence": "Third party called unstake() without victim signature. Transaction succeeded (26566 CU). nft_holder is AccountInfo not Signer."
-    }
-  ],
-  "compilation_results": {
-    "toolchain": "cargo-build-sbf (Solana CLI v3.0.2)",
-    "programs_attempted": 6,
-    "programs_compiled": 5,
-    "compilation_rate": "83%",
-    "failed": ["anchor-auction-house (1745 lines, requires Metaplex IDL)"],
-    "binaries": [
-      {"name": "multisig.so", "size_kb": 219, "anchor": "0.29.0"},
-      {"name": "tictactoe.so", "size_kb": 203, "anchor": "0.29.0"},
-      {"name": "anchor_escrow.so", "size_kb": 258, "anchor": "0.30.1"},
-      {"name": "skinflip_staking.so", "size_kb": 239, "anchor": "0.29.0"},
-      {"name": "vuln_lending.so", "size_kb": 204, "anchor": "0.29.0"}
-    ]
-  },
   "summary": {
     "static_pattern_matches": 0,
     "logic_bugs_by_llm": 4,
     "exploits_generated": 3,
     "bankrun_exploits_confirmed": 9,
-    "real_world_programs_compiled": 5,
-    "real_world_tps_confirmed": 6,
-    "demo_tps_confirmed": 3,
     "python_exploits_simulated": 3,
     "exploits_confirmed": 12,
-    "logic_bugs_missed_by_regex": 4,
-    "domains_covered": ["governance", "gaming", "DeFi/escrow", "NFT staking", "lending"]
+    "logic_bugs_missed_by_regex": 4
   }
 }
