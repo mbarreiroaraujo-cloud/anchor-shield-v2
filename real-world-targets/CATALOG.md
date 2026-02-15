@@ -21,8 +21,10 @@ Programs acquired for real-world I+D validation of anchor-shield-v2's semantic a
 | 13 | anchor-ido-pool | IDO/Token sale | coral-xyz/anchor (tests/) | 675 | 1 | — | 0 | 0 | 3 | 0 |
 | 14 | anchor-cfo | DEX fees | coral-xyz/anchor (tests/) | 995 | 1 | — | 0 | 0 | 3 | 0 |
 | 15 | anchor-auction-house | NFT marketplace | coral-xyz/anchor (tests/) | 1745 | 1 | FAILED | 1 | 1 | 10 | 3 |
+| 16 | orca-whirlpools | CLMM DEX | orca-so/whirlpools | 1337 | 3 | — | 0 | 0 | 3 | 0 |
+| 17 | nft-staking-unaudited | NFT staking | 0xShuk/NFT-Staking-Program | 1499 | 2 | — | 0 | 1 | 4 | 0 |
 
-### Sealevel-Attacks Calibration (11 vulnerability categories)
+### Sealevel-Attacks Calibration (11 vulnerability categories + 1 semantic)
 
 | # | Attack Type | Insecure Lines | Secure Lines | Detection |
 |---|------------|---------------|-------------|-----------|
@@ -37,6 +39,7 @@ Programs acquired for real-world I+D validation of anchor-shield-v2's semantic a
 | 24 | 8-pda-sharing | 45 | 48 | Static: MISSED |
 | 25 | 9-closing-accounts | 30 | 71 | Static: partial |
 | 26 | 10-sysvar-address-checking | 18 | 19 | Static: MISSED |
+| 27-29 | 10-sysvar (semantic calibration) | 18 | 19+18 | Semantic: TP insecure, 0 FP secure+recommended |
 
 ## Tier Definitions
 
@@ -47,19 +50,22 @@ Programs acquired for real-world I+D validation of anchor-shield-v2's semantic a
 
 ## Selection Criteria
 
-- **Diversity**: Different domains (DEX, staking, governance, token ops, vault, escrow, vesting)
-- **Complexity**: Range from simple (170 lines) to complex (2931 lines)
+- **Diversity**: Different domains (DEX, staking, governance, token ops, vault, escrow, vesting, CLMM)
+- **Complexity**: Range from simple (170 lines) to complex (2931+ lines)
 - **Audit status**: Mix of audited production protocols, framework examples, and community code
 - **Relevance**: Financial operations with potential for logic bugs
 - **Calibration**: Known-vulnerable programs for sensitivity/specificity testing
+- **Batch 4 additions**: Highest-value production (Orca), unaudited community (NFT Staking),
+  and sysvar calibration with ground truth (Sealevel-10)
 
 ## Aggregate Statistics
 
-- **Total programs**: 26 (15 main + 11 sealevel calibration)
-- **Total lines analyzed**: ~16,000+
-- **True Positives found**: 6 (anchor-multisig x2, solana-staking x2, anchor-tictactoe, anchor-auction-house)
-- **Likely True Positives**: 3 (anchor-swap, anchor-escrow, anchor-auction-house)
-- **False Positive rate**: 10.3% (6/58 semantic findings)
-- **Bankrun confirmed**: 2 (anchor-multisig zero-threshold, empty-owners)
+- **Total programs**: 29 (17 main + 11 sealevel calibration + 1 sealevel semantic)
+- **Total lines analyzed**: ~19,000+
+- **True Positives found**: 7 (anchor-multisig x2, solana-staking x2, anchor-tictactoe, anchor-auction-house, sealevel-10-insecure)
+- **Likely True Positives**: 4 (anchor-swap, anchor-escrow, anchor-auction-house, nft-staking-unaudited)
+- **False Positive rate**: 9.0% (6/67 semantic findings)
+- **Bankrun confirmed**: 9 (multisig x2, escrow, tictactoe, staking x2, lending x3)
 - **Simulation confirmed**: 3 (solana-staking x2, anchor-escrow)
-- **Detector versions**: v0.3.0 → v0.4.0 → v0.5.0 (2 improvement cycles)
+- **Detector versions**: v0.3.0 → v0.4.0 → v0.5.0 → v0.5.1 (3 improvement cycles)
+- **Sealevel calibration**: 11/11 categories covered (PASS on all tested categories)
