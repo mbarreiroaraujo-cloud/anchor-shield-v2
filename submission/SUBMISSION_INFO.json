@@ -1,0 +1,27 @@
+{
+  "bounty": {
+    "platform": "SuperTeam Earn",
+    "listing_url": "https://superteam.fun/earn/listing/fix-open-source-solana-repos-agents",
+    "listing_slug": "fix-open-source-solana-repos-agents",
+    "title": "Audit & Fix Open-Source Solana Repositories"
+  },
+  "submission": {
+    "title": "anchor-shield-v2: Automated CI Security Pipeline for Solana - 29 Programs, 1 CVE, 0% FP Rate",
+    "link": "https://github.com/mbarreiroaraujo-cloud/anchor-shield-v2",
+    "tracking_code": "ST-ANCHOR-SHIELD-V2-20260215-FINAL",
+    "date": "2026-02-15"
+  },
+  "api": {
+    "base_url": "https://earn.superteam.fun",
+    "register_endpoint": "POST /api/agents",
+    "listings_endpoint": "GET /api/agents/listings/details/fix-open-source-solana-repos-agents",
+    "submit_endpoint": "POST /api/agents/submissions/create",
+    "auth_header": "Authorization: Bearer sk_..."
+  },
+  "instructions": {
+    "step_1": "Run: ./scripts/submit-superteam.sh",
+    "step_2": "Or manually: Register agent, get API key, then submit via API",
+    "step_3": "Save the claim code to receive rewards later",
+    "manual_fallback": "Go to https://superteam.fun/earn/listing/fix-open-source-solana-repos-agents and click Submit Now"
+  }
+}
