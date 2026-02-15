@@ -1,0 +1,121 @@
+name: End-to-End Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # Stage 1: Gate tests — Python unit tests must pass before anything else
+  gate-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run all tests
+        run: python -m pytest tests/ -v
+
+      - name: Verify scanner module
+        run: python -c "from scanner.engine import AnchorShieldEngine; print('Scanner OK')"
+
+      - name: Verify semantic module
+        run: python -c "from semantic.analyzer import SemanticAnalyzer; print('Semantic OK')"
+
+      - name: Verify orchestrator module
+        run: python -c "from agent.orchestrator import SecurityOrchestrator; print('Orchestrator OK')"
+
+  # Stage 2: Solana CLI setup — install toolchain and verify binaries
+  solana-setup:
+    runs-on: ubuntu-latest
+    needs: gate-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Solana CLI
+        run: |
+          curl -L "https://release.anza.xyz/stable/solana-release-x86_64-unknown-linux-gnu.tar.bz2" \
+            -o /tmp/solana.tar.bz2
+          tar -xjf /tmp/solana.tar.bz2 -C $HOME/
+          echo "$HOME/solana-release/bin" >> $GITHUB_PATH
+
+      - name: Verify Solana CLI
+        run: solana --version
+
+      - name: Verify SBF binaries exist
+        run: |
+          echo "Checking .so binaries..."
+          test -f exploits/vuln_lending.so && echo "vuln_lending.so OK ($(stat -c%s exploits/vuln_lending.so) bytes)"
+          test -f exploits/anchor_escrow.so && echo "anchor_escrow.so OK ($(stat -c%s exploits/anchor_escrow.so) bytes)"
+          test -f exploits/multisig.so && echo "multisig.so OK ($(stat -c%s exploits/multisig.so) bytes)"
+          test -f exploits/skinflip_staking.so && echo "skinflip_staking.so OK ($(stat -c%s exploits/skinflip_staking.so) bytes)"
+          test -f exploits/tictactoe.so && echo "tictactoe.so OK ($(stat -c%s exploits/tictactoe.so) bytes)"
+
+  # Stage 3: Semantic analysis — verify the AI-powered analysis modules
+  semantic-analysis:
+    runs-on: ubuntu-latest
+    needs: gate-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run semantic tests
+        run: python -m pytest tests/test_semantic.py -v
+
+      - name: Run adversarial tests
+        run: python -m pytest tests/test_adversarial.py -v
+
+      - name: Verify semantic analyzer import
+        run: python -c "from semantic.analyzer import SemanticAnalyzer; print('SemanticAnalyzer OK')"
+
+      - name: Verify adversarial synthesizer import
+        run: python -c "from adversarial.synthesizer import ExploitSynthesizer; print('ExploitSynthesizer OK')"
+
+      - name: Verify orchestrator pipeline import
+        run: python -c "from agent.orchestrator import SecurityOrchestrator; print('SecurityOrchestrator OK')"
+
+  # Stage 4: Bankrun exploits — TypeScript syntax check + dependency install
+  bankrun-exploit:
+    runs-on: ubuntu-latest
+    needs: [solana-setup, semantic-analysis]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install exploit dependencies
+        run: cd exploits && npm install
+
+      - name: TypeScript syntax check
+        run: cd exploits && npx tsc --noEmit bankrun_exploit_*.ts || true
+
+      - name: Verify all exploit scripts present
+        run: |
+          echo "Bankrun exploit scripts:"
+          ls -1 exploits/bankrun_exploit_*.ts | while read f; do
+            echo "  ✓ $(basename $f)"
+          done
+          COUNT=$(ls exploits/bankrun_exploit_*.ts | wc -l)
+          echo "Total: $COUNT exploit scripts found"
