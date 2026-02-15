@@ -1,0 +1,100 @@
+═══ SEALEVEL-10 SYSVAR ADDRESS CHECKING — CALIBRATION ANALYSIS (v0.5.0) ═══
+
+Attack Type: #10 — Sysvar Address Checking
+Source: coral-xyz/sealevel-attacks (programs/10-sysvar-address-checking/)
+Variants: insecure (18 lines), secure (19 lines), recommended (18 lines)
+Tier: Calibration (known-vulnerable with known-fix)
+
+═══ STATIC SCANNER RESULTS ═══
+  Insecure:    0 findings (MISSED)
+  Secure:      0 findings (correct — no FPs)
+  Recommended: 0 findings (correct — no FPs)
+
+Static Scanner Notes:
+  The static scanner does not detect sysvar address checking vulnerabilities.
+  This is consistent with the existing CATALOG.md entry (marked as "MISSED").
+  The scanner's patterns focus on init_if_needed, duplicate mutable accounts,
+  type cosplay, close/reinit, and missing owner checks — none of which apply
+  to the sysvar spoofing pattern.
+
+═══ SEMANTIC ANALYSIS RESULTS ═══
+
+--- INSECURE VARIANT ---
+
+SEM-001 [Critical — TRUE POSITIVE] — Missing Sysvar Address Validation
+  Function: check_sysvar_address
+  Description: The CheckSysvarAddress struct accepts `rent` as raw
+    AccountInfo without any address validation:
+
+      #[derive(Accounts)]
+      pub struct CheckSysvarAddress<'info> {
+          rent: AccountInfo<'info>,  // No address check!
+      }
+
+    An attacker can pass ANY account as "rent". If the program reads
+    data from this account (e.g., rent rates, exemption thresholds),
+    it would read attacker-controlled data instead of actual sysvar values.
+
+  Attack Scenario:
+    1. Attacker creates an account with fabricated sysvar data
+    2. Attacker calls check_sysvar_address with their account as rent
+    3. Program trusts the data as legitimate rent sysvar information
+    4. In a real program, this could lead to incorrect rent calculations,
+       bypassed rent exemption checks, or other logic corruption
+
+  Estimated Impact: In isolation (this demo), the program only logs the
+    key — no direct harm. In a real program reading sysvar data, this
+    enables arbitrary data injection into the program's decision logic.
+  Confidence: 0.95
+  Classification: TP — This is the KNOWN vulnerability in sealevel-10.
+    The detector correctly identifies raw AccountInfo usage for a sysvar
+    account without address validation.
+
+--- SECURE VARIANT ---
+
+Semantic findings: 0
+
+Analysis Notes: The secure variant adds a runtime check:
+    require_eq!(ctx.accounts.rent.key(), sysvar::rent::ID);
+  This validates the account address before use. While it still uses
+  raw AccountInfo, the manual check makes it secure. The detector
+  correctly produces NO findings — 0 FPs.
+
+--- RECOMMENDED VARIANT ---
+
+Semantic findings: 0
+
+Analysis Notes: The recommended variant uses Anchor's typed sysvar:
+    rent: Sysvar<'info, Rent>,
+  This automatically validates the account is the correct sysvar.
+  The detector correctly produces NO findings — 0 FPs.
+
+═══ CALIBRATION RESULTS ═══
+
+| Variant     | Expected | Actual  | Result |
+|-------------|----------|---------|--------|
+| Insecure    | TP       | TP      | PASS   |
+| Secure      | 0 FP     | 0 FP    | PASS   |
+| Recommended | 0 FP     | 0 FP    | PASS   |
+
+Sensitivity: 1/1 = 100% (detected the known vulnerability)
+Specificity: 2/2 = 100% (no false positives on fixed variants)
+Calibration: PASS
+
+This is the 12th sealevel-attacks category calibrated (0-10 + sysvar).
+Combined with the existing 11 categories, the detector now has calibration
+data across all sealevel-attacks programs.
+
+═══ CLASSIFICATION SUMMARY ═══
+  TP:   1 (insecure variant: missing sysvar address validation)
+  LTP:  0
+  INFO: 0
+  FP:   0
+  Total semantic findings: 1
+
+═══ VERDICT ═══
+CALIBRATION PASSED. The detector correctly identifies the sysvar address
+checking vulnerability in the insecure variant while producing zero false
+positives on both the manually-secured and Anchor-typed variants. This
+validates the semantic analyzer's understanding of Solana sysvar handling
+and its ability to distinguish between unvalidated and validated accounts.

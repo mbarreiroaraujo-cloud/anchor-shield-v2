@@ -69,6 +69,20 @@ class InitIfNeededPattern(VulnerabilityPattern):
             if not is_token and not is_assoc_token:
                 continue
 
+            # v0.5.1: Skip associated_token accounts with both mint AND authority
+            # constraints. ATAs are deterministically derived from (mint, authority),
+            # so the account address is a PDA of the Associated Token Program.
+            # An attacker cannot pre-create an ATA with malicious delegate because:
+            # (a) ATA addresses are deterministic — the address is known
+            # (b) Setting delegate requires the authority to sign an Approve ix
+            # (c) If authority is a PDA, only the program can sign via CPI
+            # (d) If authority is a user, only that user can set delegate
+            if is_assoc_token:
+                has_mint = bool(re.search(r"associated_token\s*::\s*mint\s*=", attr_content))
+                has_authority = bool(re.search(r"associated_token\s*::\s*authority\s*=", attr_content))
+                if has_mint and has_authority:
+                    continue
+
             # Look for safe patterns in the surrounding context (same struct)
             # We scan ±30 lines around the match for explicit constraints
             line_num = self._get_line_number(content, match.start())
