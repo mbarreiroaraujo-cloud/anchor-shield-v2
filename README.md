@@ -80,6 +80,7 @@ Each iteration was driven by systematic error analysis of the previous batch's r
 - **SBF compilation + bankrun**: Compiles target programs to Solana SBF binaries and executes crafted exploit transactions against them using solana-bankrun (the same runtime validators use)
 - **Sealevel-attacks calibration**: Validates detection accuracy against all 11 categories of the sealevel-attacks corpus — the standard reference for Solana vulnerability patterns
 - **Production DeFi targets**: Tests against Orca Whirlpools (CLMM DEX), Marinade Finance (liquid staking), and Raydium (AMM) — representing the top tier of Solana's DeFi ecosystem
+- **Registry Integration**: Scans any verified Solana program by its on-chain address via the OtterSec Verified Programs API — the same infrastructure used by Solana Explorer and SolanaFM
 
 ---
 
@@ -176,6 +177,40 @@ python -m semantic.analyzer real-world-targets/nft-staking-unaudited/lib.rs
 # See CI in action
 # Visit: https://github.com/mbarreiroaraujo-cloud/anchor-shield-v2/actions
 ```
+
+## Scan Any Verified Solana Program
+
+anchor-shield-v2 can scan any Solana program with verified source code directly by its on-chain address:
+
+```bash
+python scripts/scan_program.py <PROGRAM_ID>
+```
+
+Example with Orca Whirlpools:
+
+```bash
+python scripts/scan_program.py whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc
+```
+
+The agent automatically:
+1. Queries the OtterSec Verified Programs API for source code
+2. Clones the verified repository at the exact deployed commit
+3. Identifies Anchor program files
+4. Runs the full security analysis pipeline
+5. Generates a detailed security report in `reports/<program_id>/`
+
+This enables autonomous scanning of the entire Solana ecosystem — no manual source code downloads required.
+
+### Example Program IDs for Testing
+
+| Program | ID | Type |
+|---------|-----|------|
+| Orca Whirlpools | `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` | DeFi AMM |
+| Marinade Finance | `MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD` | Liquid Staking |
+
+> **Note**: Only programs with verified builds on [verify.osec.io](https://verify.osec.io) can be scanned. Programs without verified source code will receive an informative message suggesting how to verify builds.
+
+---
 
 ## Results Summary
 
