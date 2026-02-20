@@ -6,7 +6,7 @@
 export const REPORT = {
   meta: {
     tool: "anchor-shield-v2",
-    version: "0.3.0",
+    version: "0.5.1",
     timestamp: new Date().toISOString(),
     analysis_time_seconds: 15.4,
     target: "examples/vulnerable-lending",

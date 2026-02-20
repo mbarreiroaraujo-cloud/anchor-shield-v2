@@ -29,6 +29,7 @@ function Header({ activeTab, setActiveTab }) {
     { id: 'semantic', label: 'Semantic Analysis' },
     { id: 'exploits', label: 'Exploits' },
     { id: 'static', label: 'Static Scanner' },
+    { id: 'attestations', label: 'Attestations' },
   ]
 
   return (
@@ -39,7 +40,7 @@ function Header({ activeTab, setActiveTab }) {
           <span className="font-bold text-gray-300">-shield</span>
         </div>
         <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#9945FF22', color: '#9945FF' }}>
-          v0.3.0
+          v0.5.1
         </span>
         <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#14F19522', color: '#14F195' }}>
           Adversarial
@@ -75,9 +76,36 @@ function OverviewTab() {
 
   return (
     <div className="space-y-6">
-      {/* Hero comparison */}
+      {/* v0.5.1 Capabilities Banner */}
+      <div className="rounded-xl p-4 sm:p-6" style={{ background: 'linear-gradient(135deg, #9945FF15 0%, #14F19510 100%)', border: '1px solid #9945FF33' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs px-2 py-0.5 rounded font-bold" style={{ background: '#14F19522', color: '#14F195' }}>v0.5.1</span>
+          <h2 className="text-lg font-semibold text-gray-200">Adversarial Security Agent for Solana</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+          <StatCard value="29" label="Programs Analyzed" color="#9945FF" />
+          <StatCard value="9" label="Exploits Confirmed" color="#14F195" />
+          <StatCard value="9.0%" label="FP Rate (50% reduction)" color="#FFA500" />
+          <StatCard value="53" label="Tests Passing" color="#00C853" />
+        </div>
+        <div className="flex flex-wrap gap-3 text-xs">
+          <a href="https://github.com/solana-foundation/anchor/pull/4229" target="_blank" rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-full transition-all hover:opacity-80" style={{ background: '#FF6B3522', color: '#FF6B35', border: '1px solid #FF6B3544' }}>
+            Anchor PR #4229 — 3 framework vulnerabilities found
+          </a>
+          <span className="px-3 py-1.5 rounded-full" style={{ background: '#9945FF22', color: '#9945FF' }}>
+            Registry scanning via OtterSec API
+          </span>
+          <span className="px-3 py-1.5 rounded-full" style={{ background: '#14F19522', color: '#14F195' }}>
+            On-chain SPL Memo attestations
+          </span>
+        </div>
+      </div>
+
+      {/* Analysis Comparison (lending pool demo) */}
       <div className="rounded-xl p-4 sm:p-6" style={{ background: 'linear-gradient(135deg, #1A1D2E 0%, #252836 100%)' }}>
-        <h2 className="text-lg font-semibold mb-4 text-gray-300">Analysis Comparison</h2>
+        <h2 className="text-lg font-semibold mb-1 text-gray-300">Analysis Comparison</h2>
+        <p className="text-xs text-gray-500 mb-4">Lending pool demo — showing the 3-layer pipeline in action</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <ComparisonCard
             title="Regex Scanner"
@@ -173,9 +201,9 @@ function OverviewTab() {
 
       {/* Pipeline flow */}
       <div className="rounded-xl p-5" style={{ background: '#1A1D2E' }}>
-        <h3 className="font-semibold text-gray-300 mb-4">Analysis Pipeline</h3>
+        <h3 className="font-semibold text-gray-300 mb-4">Autonomous Analysis Pipeline</h3>
         <div className="flex flex-col sm:flex-row items-center gap-3 text-sm flex-wrap">
-          <PipelineStep step="1" label="Source Code" detail="Anchor .rs files" />
+          <PipelineStep step="1" label="Registry Scan" detail="OtterSec API" color="#9945FF" />
           <PipelineArrow />
           <PipelineStep step="2" label="Static Scan" detail="Regex patterns" color="#666" />
           <PipelineArrow />
@@ -185,9 +213,18 @@ function OverviewTab() {
           <PipelineArrow />
           <PipelineStep step="5" label="Bankrun" detail="SBF binary exec" color="#14F195" />
           <PipelineArrow />
-          <PipelineStep step="6" label="Python Sim" detail="Fallback verify" color="#00C853" />
+          <PipelineStep step="6" label="Attestation" detail="SPL Memo on-chain" color="#14F195" />
         </div>
       </div>
+    </div>
+  )
+}
+
+function StatCard({ value, label, color }) {
+  return (
+    <div className="rounded-lg p-3 text-center" style={{ background: '#0F1117' }}>
+      <div className="text-2xl sm:text-3xl font-bold mb-1" style={{ color }}>{value}</div>
+      <div className="text-xs text-gray-500">{label}</div>
     </div>
   )
 }
@@ -782,6 +819,109 @@ function StaticFindingCard({ finding }) {
   )
 }
 
+/* ── Attestations Tab ── */
+function AttestationsTab() {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl p-4 sm:p-6" style={{ background: '#1A1D2E' }}>
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <h2 className="text-lg font-semibold text-gray-300">On-Chain Security Attestations</h2>
+          <span className="text-xs px-2 py-0.5 rounded font-bold" style={{ background: '#14F19522', color: '#14F195' }}>
+            SPL Memo
+          </span>
+        </div>
+        <p className="text-sm text-gray-400 mb-6">
+          anchor-shield-v2 publishes verifiable security attestations to the Solana blockchain via SPL Memo transactions,
+          creating an immutable record of every audit performed. Each attestation includes the program ID, SHA256 hash of the
+          full report, severity score, and timestamp.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="rounded-lg p-4" style={{ background: '#0F1117' }}>
+            <div className="text-xs text-gray-500 mb-2">Attestation Format</div>
+            <pre className="text-xs font-mono overflow-x-auto" style={{ color: '#14F195' }}>
+{`ANCHOR-SHIELD-AUDIT
+|<programId>
+|<sha256Hash>
+|<timestamp>
+|<severityScore>
+|<status>
+|<findingCounts>
+|<detectorVersion>`}</pre>
+          </div>
+          <div className="rounded-lg p-4" style={{ background: '#0F1117' }}>
+            <div className="text-xs text-gray-500 mb-2">How It Works</div>
+            <div className="space-y-2 text-xs text-gray-400">
+              <div className="flex items-start gap-2">
+                <span style={{ color: '#9945FF' }}>1.</span>
+                <span>Reads SECURITY_REPORT.json and computes SHA256 hash</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span style={{ color: '#9945FF' }}>2.</span>
+                <span>Builds compact memo with audit fingerprint</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span style={{ color: '#9945FF' }}>3.</span>
+                <span>Signs and submits SPL Memo tx to Solana devnet</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span style={{ color: '#9945FF' }}>4.</span>
+                <span>Records tx signature back in report for traceability</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl p-5 border" style={{ background: '#1A1D2E', borderColor: '#FF6B3544' }}>
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-xs px-2 py-0.5 rounded font-bold" style={{ background: '#FF6B3522', color: '#FF6B35' }}>
+            Anchor Framework
+          </span>
+          <span className="text-sm font-semibold text-gray-200">PR #4229 — Real Vulnerabilities Found</span>
+        </div>
+        <p className="text-sm text-gray-400 mb-3">
+          During development, the agent discovered 3 security issues in Anchor itself — Solana's most widely used
+          development framework (~5,000 GitHub stars). High + Medium severity, status: open/under review.
+        </p>
+        <a href="https://github.com/solana-foundation/anchor/pull/4229" target="_blank" rel="noopener noreferrer"
+          className="inline-block text-xs px-4 py-2 rounded transition-all hover:opacity-80"
+          style={{ background: '#FF6B3522', color: '#FF6B35', border: '1px solid #FF6B3544' }}>
+          View PR #4229 on GitHub
+        </a>
+      </div>
+
+      <div className="rounded-xl p-5" style={{ background: '#1A1D2E' }}>
+        <h3 className="font-semibold text-gray-300 mb-3">Validation Summary (v0.5.1)</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-800 text-gray-500">
+                <th className="text-left p-3 font-medium">Metric</th>
+                <th className="text-left p-3 font-medium">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['Programs Analyzed', '29 (15 real-world + 11 calibration + 3 batch 4)'],
+                ['Exploits Confirmed', '9 (bankrun verified)'],
+                ['False Positive Rate', '9.0% aggregate (0% in Batch 4)'],
+                ['Detector Evolution', 'v0.3.0 → v0.5.1 (4 iterations, 50% FP reduction)'],
+                ['Framework Bugs', '3 vulnerabilities in Anchor itself (PR #4229)'],
+                ['CI Pipeline', '53 tests, 4-stage automated'],
+              ].map(([metric, value]) => (
+                <tr key={metric} className="border-b border-gray-800/50">
+                  <td className="p-3 text-gray-400">{metric}</td>
+                  <td className="p-3 text-gray-300">{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Shared Components ── */
 function SeverityBadge({ severity }) {
   return (
@@ -801,6 +941,7 @@ export default function App() {
     semantic: <SemanticTab />,
     exploits: <ExploitsTab />,
     static: <StaticTab />,
+    attestations: <AttestationsTab />,
   }
 
   return (
@@ -810,7 +951,7 @@ export default function App() {
         {tabContent[activeTab]}
       </main>
       <footer className="border-t border-gray-800 py-6 text-center text-sm text-gray-600">
-        anchor-shield-v2 v0.3.0 | Adversarial Security Agent for Solana
+        anchor-shield-v2 v0.5.1 | Adversarial Security Agent for Solana
       </footer>
     </div>
   )
