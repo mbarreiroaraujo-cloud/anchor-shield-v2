@@ -164,5 +164,16 @@
     "python_exploits_simulated": 3,
     "exploits_confirmed": 12,
     "logic_bugs_missed_by_regex": 4
+  },
+  "attestation": {
+    "status": "pending",
+    "cluster": "devnet",
+    "memo": "ANCHOR-SHIELD-AUDIT|whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc|71df21fcc834ad5b|1771597485|63/100|FAIL|2c1h1m0l|anchor-shield-v2-v0.5.1",
+    "report_hash": "71df21fcc834ad5bd085a601b8f79baf15e6429722a45f03abc350dc8de4f64c",
+    "severity_score": 63,
+    "audit_status": "FAIL",
+    "auditor_pubkey": "DgFL4bPFSN8hafhzYnZo5Au95fSvRoWtz43Zjrska3Nb",
+    "timestamp": "2026-02-20T14:24:45.409833+00:00",
+    "note": "Attestation prepared but not yet published (network unavailable during CI). Run scripts/attest.py with devnet access to publish on-chain."
   }
 }

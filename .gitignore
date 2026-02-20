@@ -9,3 +9,7 @@ build/
 .venv/
 target/
 reports/
+
+# Solana keypairs (never commit private keys)
+*-keypair.json
+attestation/auditor-keypair.json

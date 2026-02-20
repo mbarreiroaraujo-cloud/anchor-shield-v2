@@ -72,6 +72,8 @@ Each iteration was driven by systematic error analysis of the previous batch's r
 
 **Validated against production protocols.** Orca Whirlpools, Marinade Finance, and Raydium — three of Solana's top DeFi protocols — were included in the analysis corpus alongside community projects and the sealevel-attacks calibration suite.
 
+**On-chain audit attestations.** The only security tool that publishes verifiable audit results directly to the Solana blockchain — creating an immutable, publicly auditable record of every security analysis performed.
+
 ---
 
 ## How Solana Is Used
@@ -81,6 +83,7 @@ Each iteration was driven by systematic error analysis of the previous batch's r
 - **Sealevel-attacks calibration**: Validates detection accuracy against all 11 categories of the sealevel-attacks corpus — the standard reference for Solana vulnerability patterns
 - **Production DeFi targets**: Tests against Orca Whirlpools (CLMM DEX), Marinade Finance (liquid staking), and Raydium (AMM) — representing the top tier of Solana's DeFi ecosystem
 - **Registry Integration**: Scans any verified Solana program by its on-chain address via the OtterSec Verified Programs API — the same infrastructure used by Solana Explorer and SolanaFM
+- **On-Chain Attestations**: Publishes verifiable security audit results to the Solana blockchain via SPL Memo transactions, creating immutable proof of every analysis
 
 ---
 
@@ -155,6 +158,8 @@ This project evolved from [anchor-shield v1](https://github.com/mbarreiroaraujo-
 
 **PUBLIC evidence** (GitHub Actions logs, reproducible)
 
+**ON-CHAIN ATTESTATIONS** (verifiable audit records on Solana devnet)
+
 ## Quick Start
 
 ```bash
@@ -209,6 +214,33 @@ This enables autonomous scanning of the entire Solana ecosystem — no manual so
 | Marinade Finance | `MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD` | Liquid Staking |
 
 > **Note**: Only programs with verified builds on [verify.osec.io](https://verify.osec.io) can be scanned. Programs without verified source code will receive an informative message suggesting how to verify builds.
+
+---
+
+## On-Chain Security Attestations
+
+anchor-shield-v2 publishes verifiable security attestations on the Solana blockchain, creating an immutable record of every audit performed.
+
+```bash
+# After running analysis, publish attestation to devnet
+python scripts/attest.py SECURITY_REPORT.json --program-id <PROGRAM_ID>
+```
+
+Each attestation includes:
+- **Program ID** of the audited program
+- **SHA256 hash** of the full security report (tamper-proof verification)
+- **Severity score** and finding counts (Critical/High/Medium/Low)
+- **Timestamp** and auditor version
+
+The attestation is published as an SPL Memo transaction on Solana devnet, permanently recording the audit fingerprint on-chain. Anyone can verify the attestation by checking the transaction on [Solana Explorer](https://explorer.solana.com/?cluster=devnet).
+
+**How it works:**
+1. The script reads the `SECURITY_REPORT.json` and computes a SHA256 hash
+2. It builds a compact memo: `ANCHOR-SHIELD-AUDIT|<programId>|<hash>|<timestamp>|<score>|<status>|<findings>|<version>`
+3. Signs and submits an SPL Memo transaction to Solana devnet
+4. Records the transaction signature back in the report for traceability
+
+This is a novel contribution — **no existing Solana security tool publishes audit results as verifiable on-chain attestations**.
 
 ---
 
