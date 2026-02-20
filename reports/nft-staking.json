@@ -1,0 +1,294 @@
+{
+  "target": "/workspaces/anchor-shield-v2/real-world-targets/nft-staking-unaudited/lib.rs",
+  "scan_time_seconds": 0.02,
+  "files_scanned": 1,
+  "patterns_checked": 6,
+  "anchor_version": null,
+  "security_score": "C",
+  "summary": {
+    "total": 9,
+    "by_severity": {
+      "Critical": 0,
+      "High": 0,
+      "Medium": 1,
+      "Low": 8
+    },
+    "by_pattern": {
+      "ANCHOR-005": 1,
+      "ANCHOR-006": 8
+    }
+  },
+  "findings": [
+    {
+      "id": "ANCHOR-005",
+      "name": "Close + Reinit Lifecycle Attack",
+      "severity": "Medium",
+      "file": "lib.rs",
+      "line": 1034,
+      "description": "Account type 'TokenAccount' is used with close (in Unstake.nft_custody, line 1043) and init_if_needed (in Unstake.nft_receive_account, line 1034). Attacker can close and revive the account.",
+      "root_cause": "After close zeroes an account, init_if_needed can re-initialize it because the account appears uninitialized (system-owned). An attacker who funds the account between close and init_if_needed controls the re-initialization.",
+      "exploit_scenario": "1. Attacker calls instruction with close constraint\n2. Account zeroed, lamports transferred\n3. Attacker funds account with rent-exempt minimum\n4. Attacker calls init_if_needed \u2014 account re-initialized\n5. Attacker controls initialization parameters",
+      "fix_recommendation": "Use plain init instead of init_if_needed, or add lifecycle state tracking:\n  constraint = !account.is_closed",
+      "code_snippet": "    1031 |         associated_token::mint = nft_mint,\n    1032 |         associated_token::authority = staker,\n    1033 |     )]\n>>> 1034 |     nft_receive_account: Box<Account<'info, TokenAccount>>,\n    1035 | \n    1036 |     #[account(\n    1037 |         mut,",
+      "before_after_state": {
+        "before": "Account: initialized, authority=victim",
+        "after": "Account: re-initialized via init_if_needed, authority=attacker",
+        "damage": "Account hijack via close-then-reinit lifecycle attack."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "Medium \u2014 requires close + init_if_needed on same type",
+        "breach_cost_context": "Account revival: $50K-$2M per program."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "0.25.0 - 0.30.x",
+      "ecosystem_recommendations": [
+        "Use plain init instead of init_if_needed",
+        "Add lifecycle state tracking to prevent re-initialization"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 606,
+      "description": "In struct InitStaking: field 'token_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "     603 |         ],\n     604 |         bump\n     605 |     )]\n>>>  606 |     pub token_authority: UncheckedAccount<'info>,\n     607 | \n     608 |     /// CHECK: This account is not read or written\n     609 |     #[account(",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 616,
+      "description": "In struct InitStaking: field 'nft_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "     613 |         ],\n     614 |         bump\n     615 |     )]\n>>>  616 |     pub nft_authority: UncheckedAccount<'info>,\n     617 | \n     618 |     pub token_program: Program<'info, Token>,\n     619 |     pub associated_token_program: Program<'info, AssociatedToken>,",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 766,
+      "description": "In struct Stake: field 'nft_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "     763 |         ],\n     764 |         bump = stake_details.nft_auth_bump\n     765 |     )]\n>>>  766 |     pub nft_authority: UncheckedAccount<'info>,\n     767 | \n     768 |     #[account(\n     769 |         init_if_needed,",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 892,
+      "description": "In struct WithdrawReward: field 'token_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "     889 |         ],\n     890 |         bump = stake_details.token_auth_bump\n     891 |     )]\n>>>  892 |     pub token_authority: UncheckedAccount<'info>,\n     893 | \n     894 |     #[account(mut)]\n     895 |     pub staker: Signer<'info>,",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 1053,
+      "description": "In struct Unstake: field 'token_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "    1050 |         ],\n    1051 |         bump = stake_details.token_auth_bump\n    1052 |     )]\n>>> 1053 |     pub token_authority: UncheckedAccount<'info>,\n    1054 | \n    1055 |      /// CHECK: This account is not read or written\n    1056 |      #[account(",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 1063,
+      "description": "In struct Unstake: field 'nft_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "    1060 |         ],\n    1061 |         bump = stake_details.nft_auth_bump\n    1062 |     )]\n>>> 1063 |     pub nft_authority: UncheckedAccount<'info>,\n    1064 | \n    1065 |     #[account(mut)]\n    1066 |     pub staker: Signer<'info>,",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 1353,
+      "description": "In struct AddFunds: field 'token_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "    1350 |         ],\n    1351 |         bump = stake_details.token_auth_bump\n    1352 |     )]\n>>> 1353 |     pub token_authority: UncheckedAccount<'info>,\n    1354 | \n    1355 |     pub creator: Signer<'info>,\n    1356 |     pub token_program: Program<'info, Token>",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    },
+    {
+      "id": "ANCHOR-006",
+      "name": "Missing Owner Validation",
+      "severity": "Low",
+      "file": "lib.rs",
+      "line": 1425,
+      "description": "In struct CloseStaking: field 'token_authority' uses raw UncheckedAccount without owner validation or CHECK documentation.",
+      "root_cause": "Solana accounts are byte arrays with an owner field. Any program can create accounts with arbitrary data. Anchor's Account<T> verifies discriminator and owner. Raw AccountInfo provides no verification.",
+      "exploit_scenario": "1. Program deserializes without owner check\n2. Attacker creates matching account in their program\n3. Attacker passes fake account to victim program\n4. Program operates on forged data",
+      "fix_recommendation": "Use Account<'info, T> for automatic owner + discriminator check, or add:\n  #[account(owner = my_program::ID)]\n  /// CHECK: Owner verified via constraint\n  pub data: AccountInfo<'info>,",
+      "code_snippet": "    1422 |         ],\n    1423 |         bump\n    1424 |     )]\n>>> 1425 |     pub token_authority: UncheckedAccount<'info>,\n    1426 | \n    1427 |     pub creator: Signer<'info>,\n    1428 |     pub token_program: Program<'info, Token>",
+      "before_after_state": {
+        "before": "Expected: account owned by this program",
+        "after": "Actual: attacker passes account from their own program",
+        "damage": "Arbitrary state manipulation via fake account data."
+      },
+      "impact": {
+        "attack_cost": "< 0.01 SOL",
+        "exploitability": "High \u2014 most common Solana vulnerability",
+        "breach_cost_context": "Missing owner checks: #1 audit finding in professional Solana security audits."
+      },
+      "reference": "https://github.com/solana-foundation/anchor/pull/4229",
+      "anchor_versions_affected": "All versions (developer-side pattern)",
+      "ecosystem_recommendations": [
+        "Replace UncheckedAccount<'info> with Account<'info, T>",
+        "Add #[account(owner = program::ID)] constraint",
+        "Add /// CHECK: documentation"
+      ]
+    }
+  ],
+  "attestation": {
+    "status": "pending",
+    "cluster": "devnet",
+    "memo": "ANCHOR-SHIELD-AUDIT|FZaTXcKpGef7ew74UHpJAkrZAfhMTZbSFJ297aKjURXN|49fa2730b9967881|1771623309|0/100|PASS|0c0h0m0l|anchor-shield-v2-v0.5.1",
+    "report_hash": "49fa2730b9967881a6ff1794e1f22188350b62533a0e392cfae5f3f7ec16dc6a",
+    "severity_score": 0,
+    "audit_status": "PASS",
+    "auditor_pubkey": "CEK1JLJ8cSLAygTyXDUjjV1TzQCzyZZcpWtGdkzEf4KB",
+    "timestamp": "2026-02-20T21:35:16.121630+00:00",
+    "note": "Attestation prepared but not yet published (network unavailable). Run the script again with devnet access to publish."
+  }
+}

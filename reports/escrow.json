@@ -1,0 +1,19 @@
+{
+  "target": "/workspaces/anchor-shield-v2/real-world-targets/anchor-escrow/lib.rs",
+  "scan_time_seconds": 0.0,
+  "files_scanned": 1,
+  "patterns_checked": 6,
+  "anchor_version": null,
+  "security_score": "A",
+  "summary": {
+    "total": 0,
+    "by_severity": {
+      "Critical": 0,
+      "High": 0,
+      "Medium": 0,
+      "Low": 0
+    },
+    "by_pattern": {}
+  },
+  "findings": []
+}
