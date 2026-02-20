@@ -6,6 +6,7 @@
 ![Detector](https://img.shields.io/badge/detector-v0.5.1-orange)
 ![CI](https://img.shields.io/badge/CI-automated-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![Anchor PR](https://img.shields.io/badge/Anchor%20PR-%234229%20open-orange)
 
 > Adversarial security agent for Solana programs — autonomously conceived, built, and iterated by an AI agent (Claude Code).
 
@@ -17,7 +18,7 @@ Built for the SuperTeam **Open Innovation Track: Build Anything on Solana** boun
 
 **Live Dashboard**: [mbarreiroaraujo-cloud.github.io/anchor-shield-v2](https://mbarreiroaraujo-cloud.github.io/anchor-shield-v2/)
 
-![Dashboard](docs/screenshots/dashboard-scan-results.png)
+![Dashboard](docs/screenshots/dashboard-scan-results.jpg)
 
 ---
 
@@ -74,6 +75,7 @@ This closes the loop from ecosystem discovery to on-chain certification — no h
 | Exploitation | Confirmed 9 vulnerabilities via bankrun exploits | [EXECUTION_EVIDENCE.md](EXECUTION_EVIDENCE.md) |
 | Ecosystem Scanning | Queries OtterSec API to fetch any verified program by address | [scripts/scan_program.py](scripts/scan_program.py) |
 | Certification | Publishes audit attestations to Solana devnet via SPL Memo | [scripts/attest.py](scripts/attest.py) |
+| Framework Security | Found 3 vulnerabilities in Anchor framework itself | [PR #4229](https://github.com/solana-foundation/anchor/pull/4229) |
 
 ---
 
@@ -90,6 +92,8 @@ This closes the loop from ecosystem discovery to on-chain certification — no h
 **Validated against the largest corpus in the space.** 29 programs — including Orca Whirlpools, Marinade Finance, and Raydium (three of Solana's top DeFi protocols) — alongside community projects and the sealevel-attacks calibration suite. Most security tools validate against 3-10 programs.
 
 **On-chain audit attestations.** The only security tool that publishes verifiable audit results directly to the Solana blockchain — creating an immutable, publicly auditable record of every security analysis performed.
+
+**Real vulnerability in the Anchor framework.** During development, the agent discovered 3 security issues in Anchor itself — Solana's most widely used development framework (~5,000 GitHub stars). These were reported via [PR #4229](https://github.com/solana-foundation/anchor/pull/4229) (High + Medium severity, status: open/under review). This demonstrates the tool finds real bugs in production infrastructure, not just test programs.
 
 **Original vulnerability discovery.** The agent found a real, previously unreported accounting mismatch in an NFT Staking program (cross-function reward calculation inconsistency) — demonstrating the semantic analyzer catches logic bugs that static tools miss entirely.
 
