@@ -9,9 +9,13 @@
 
 > Adversarial security agent for Solana programs — autonomously conceived, built, and iterated by an AI agent (Claude Code).
 
+> **The open-source Slither for Anchor** — the first free, CI-integrated security analysis tool purpose-built for Solana's most popular framework.
+
 Built for the SuperTeam **Open Innovation Track: Build Anything on Solana** bounty.
 
-**Live Demo**: [Dashboard](https://mbarreiroaraujo-cloud.github.io/anchor-shield-v2/)
+![anchor-shield-v2 demo](demo/anchor-shield-v2-demo.gif)
+
+**Live Dashboard**: [mbarreiroaraujo-cloud.github.io/anchor-shield-v2](https://mbarreiroaraujo-cloud.github.io/anchor-shield-v2/)
 
 ![Dashboard](docs/screenshots/dashboard-scan-results.png)
 
