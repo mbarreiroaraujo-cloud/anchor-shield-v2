@@ -171,7 +171,14 @@ The attestation is published as an SPL Memo transaction on Solana devnet, perman
 
 This is a novel contribution — **no existing Solana security tool publishes audit results as verifiable on-chain attestations**.
 
-> **Current status**: The attestation payload has been prepared and the script is functional, but the initial attestation has not yet been published on-chain (devnet was unavailable during the CI run that generated `SECURITY_REPORT.json`). Running `python scripts/attest.py SECURITY_REPORT.json` with devnet access will publish the attestation. See the `attestation` field in [SECURITY_REPORT.json](SECURITY_REPORT.json) for details.
+**Published Attestations** (Solana Devnet - verified on-chain):
+
+| Program | TX | Explorer |
+|---|---|---|
+| NFT Staking (`FZaTXcKp...`) | `3N9f7Ezp...` | [View](https://explorer.solana.com/tx/3N9f7EzpGqacygmxDKKQRferYPx5pw455tWLJ3RRvfSm8SXmncmjQsmuyeo5N7ofVdfXfhb8yyNormDZjGYTeNu?cluster=devnet) |
+| Orca Whirlpools (`whirLbMi...`) | `jRpD8vBo...` | [View](https://explorer.solana.com/tx/jRpD8vBoEXXkcEhYyhHKHWAY3XnqhZnqdTFkiSnEeJQtGoJNcC6zyyaVotVPL5p6osJwuDkmyfDWbJ1Wm7x6bN4?cluster=devnet) |
+| Escrow (`Fg6PaFpo...`) | `5j6zXNwh...` | [View](https://explorer.solana.com/tx/5j6zXNwhdANVhBJDPDLhNZ9xySBAajBtkdrGxZxQ33Xm7JAUrzJWKZiqjv6miW9SZacnreFpsq6p6s6pWqPHCSoU?cluster=devnet) |
+| Lending (`BJYyF44x...`) | `44zvdFEr...` | [View](https://explorer.solana.com/tx/44zvdFEr2khyzo3ztv5SiRoXteerknJ34hdWqqc4eYsf8khZ4LDdE1xavpKQD2kxTBbwHp8Jh9eLwdDENnHxXbe3?cluster=devnet) |
 
 ---
 
