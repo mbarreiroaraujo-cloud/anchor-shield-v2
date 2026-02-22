@@ -29,6 +29,7 @@ This is not a toy — it found real vulnerabilities in production Anchor code:
 - **PR [#4229](https://github.com/solana-foundation/anchor/pull/4229)** submitted to `solana-foundation/anchor` with **3 confirmed vulnerabilities** (High + Medium severity)
 - Findings include missing signer checks, constraint logic errors, and state validation gaps in widely-used example programs
 - The agent generated reproducible exploit PoCs for each finding, making triage straightforward for maintainers
+- **Proposed for [awesome-solana-ai](https://github.com/solana-foundation/awesome-solana-ai)** — Solana Foundation's official curated list of AI tools ([PR #46](https://github.com/solana-foundation/awesome-solana-ai/pull/46)). The only security scanner proposed for the list.
 
 ## 4. Meaningful Solana Use
 
