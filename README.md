@@ -7,6 +7,7 @@
 ![CI](https://img.shields.io/badge/CI-automated-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Anchor PR](https://img.shields.io/badge/Anchor%20PR-%234229%20open-orange)
+![Awesome Solana AI](https://img.shields.io/badge/awesome--solana--ai-PR%2346-yellow)
 
 > Adversarial security agent for Solana programs — autonomously conceived, built, and iterated by an AI agent (Claude Code).
 
@@ -24,7 +25,7 @@ Built for the SuperTeam **Open Innovation Track: Build Anything on Solana** boun
 
 ## Agent Autonomy
 
-**Built in approximately 72 hours of continuous autonomous agent operation**, demonstrating rapid iteration capability. The entire project — architecture decisions, code, testing, analysis, and documentation — was produced by an AI agent (Claude Code) operating autonomously across 83 commits.
+**Built in approximately 72 hours of continuous autonomous agent operation**, demonstrating rapid iteration capability. The entire project — architecture decisions, code, testing, analysis, and documentation — was produced by an AI agent (Claude Code) operating autonomously across 99 commits.
 
 ### Planning
 
@@ -68,7 +69,7 @@ This closes the loop from ecosystem discovery to on-chain certification — no h
 | Phase | What the agent decided/did | Evidence |
 |-------|---------------------------|----------|
 | Architecture | Designed 4-layer pipeline (static → semantic → exploit → bankrun) | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Implementation | Wrote scanner, analyzer, exploits, dashboard, CI | 83 commits |
+| Implementation | Wrote scanner, analyzer, exploits, dashboard, CI | 99 commits |
 | Validation | Analyzed 29 programs in 4 batches | [END_TO_END_VALIDATION.md](END_TO_END_VALIDATION.md) |
 | Improvement | Iterated detector across 4 versions (FP 18% → 9%) | [research/ITERATION_LOG.md](research/ITERATION_LOG.md) |
 | Discovery | Found original vulnerability in NFT Staking program | [SECURITY_REPORT.json](SECURITY_REPORT.json) |
@@ -76,6 +77,7 @@ This closes the loop from ecosystem discovery to on-chain certification — no h
 | Ecosystem Scanning | Queries OtterSec API to fetch any verified program by address | [scripts/scan_program.py](scripts/scan_program.py) |
 | Certification | Publishes audit attestations to Solana devnet via SPL Memo | [scripts/attest.py](scripts/attest.py) |
 | Framework Security | Found 3 vulnerabilities in Anchor framework itself | [PR #4229](https://github.com/solana-foundation/anchor/pull/4229) |
+| Ecosystem Recognition | Proposed for Solana Foundation's awesome-solana-ai | [PR #46](https://github.com/solana-foundation/awesome-solana-ai/pull/46) |
 
 ---
 
@@ -98,6 +100,8 @@ This closes the loop from ecosystem discovery to on-chain certification — no h
 **Original vulnerability discovery.** The agent found a real, previously unreported accounting mismatch in an NFT Staking program (cross-function reward calculation inconsistency) — demonstrating the semantic analyzer catches logic bugs that static tools miss entirely.
 
 **Fully public and reproducible.** Every analysis run is logged in GitHub Actions with full output. Any reviewer can clone the repo, run the pipeline, and reproduce the results end-to-end.
+
+**Proposed for Solana Foundation's official AI tooling list.** anchor-shield-v2 has been submitted for inclusion in [awesome-solana-ai](https://github.com/solana-foundation/awesome-solana-ai), the Solana Foundation's curated directory of AI tools ([PR #46](https://github.com/solana-foundation/awesome-solana-ai/pull/46)). This is the only security scanner proposed for the list.
 
 ---
 
