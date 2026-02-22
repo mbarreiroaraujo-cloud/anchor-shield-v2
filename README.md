@@ -97,6 +97,8 @@ This closes the loop from ecosystem discovery to on-chain certification — no h
 
 **Real vulnerability in the Anchor framework.** During development, the agent discovered 3 security issues in Anchor itself — Solana's most widely used development framework (~5,000 GitHub stars). These were reported via [PR #4229](https://github.com/solana-foundation/anchor/pull/4229) (High + Medium severity, status: open/under review). This demonstrates the tool finds real bugs in production infrastructure, not just test programs.
 
+**Full vulnerability disclosure:** [VULNERABILITY_DISCLOSURE_001.md](docs/VULNERABILITY_DISCLOSURE_001.md)
+
 **Original vulnerability discovery.** The agent found a real, previously unreported accounting mismatch in an NFT Staking program (cross-function reward calculation inconsistency) — demonstrating the semantic analyzer catches logic bugs that static tools miss entirely.
 
 **Fully public and reproducible.** Every analysis run is logged in GitHub Actions with full output. Any reviewer can clone the repo, run the pipeline, and reproduce the results end-to-end.
